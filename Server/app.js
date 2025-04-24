@@ -9,6 +9,7 @@ const app = express();
 
 const path = require("path");
 const listingsRouter = require("./api/listings");
+const bidRoutes = require("./api/bidRoutes"); // Adjust path if needed
 const bookingRoutes = require("./api/bookings");
 const paymentRoutes = require("./api/payments");
 const adminLoginRoutes = require("./api/adminLogin");
@@ -33,7 +34,8 @@ app.use(require("./api/change-password"));
 app.use(require("./api/update-profile"));
 // app.use(require('./api/carListing'));
 app.use("/api/listings", listingsRouter);
-app.use("/api/booking", bookingRoutes);
+app.use("/api", bidRoutes);
+app.use("/api/bookings", bookingRoutes);
 app.use("/payments", paymentRoutes);
 app.use("/api", deleteUserRoute);
 app.use("/api/admin", adminLoginRoutes); // Admin login

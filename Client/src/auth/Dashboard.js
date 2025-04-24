@@ -1,13 +1,38 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Key, LogOut, Calendar, X } from "lucide-react";
+import {
+  User,
+  Key,
+  LogOut,
+  X,
+  Car,
+  Wrench,
+  CreditCard,
+  TestTube2,
+  Clock,
+  MapPin,
+  CheckCircle,
+  AlertCircle,
+  DollarSign,
+  Car as CarIcon,
+  Settings,
+  ChevronDown,
+  ChevronUp,
+  Info,
+} from "lucide-react";
 import API_BASE_URL from "../config/apiConfig";
 
 function Dashboard() {
   const [name, setName] = useState("");
   const [greeting, setGreeting] = useState("");
-  const [bookings, setBookings] = useState([]);
-  const [showBookings, setShowBookings] = useState(false);
+  const [userData, setUserData] = useState({
+    bookings: [],
+    payments: [],
+    testDrives: [],
+    serviceBookings: [],
+  });
+  const [activeTab, setActiveTab] = useState("bookings");
+  const [expandedItems, setExpandedItems] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -21,6 +46,7 @@ function Dashboard() {
     } else {
       setName(toTitleCase(storedName));
       setGreeting(getGreeting());
+      fetchUserData();
     }
 
     const interval = setInterval(() => {
@@ -30,40 +56,53 @@ function Dashboard() {
     return () => clearInterval(interval);
   }, [navigate]);
 
-  const logout = () => {
-    localStorage.clear();
-    navigate("/Login");
-  };
-
-  const fetchBookings = async () => {
+  const fetchUserData = async () => {
     setIsLoading(true);
     try {
       const userId = localStorage.getItem("id");
-      const response = await fetch(
-        `${API_BASE_URL}/api/booking?user_id=${userId}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch bookings");
-      const data = await response.json();
 
-      const transformed = data.map((booking) => ({
-        ...booking,
-        total_price: booking.total_price?.$numberDecimal || booking.total_price,
-        paid_price: booking.paid_price?.$numberDecimal || booking.paid_price,
-        payment: booking.payment
-          ? {
-              ...booking.payment,
-              amount:
-                booking.payment.amount?.$numberDecimal ||
-                booking.payment.amount,
-            }
-          : null,
-      }));
-      setBookings(transformed);
+      // Fetch all data in parallel
+      const [bookingsRes, paymentsRes, testDrivesRes, serviceBookingsRes] =
+        await Promise.all([
+          fetch(`${API_BASE_URL}/api/bookings?user_id=${userId}`),
+          fetch(`${API_BASE_URL}/payments?user_id=${userId}`),
+          fetch(`${API_BASE_URL}/api/listings/test-drives/user/${userId}`),
+          fetch(
+            `${API_BASE_URL}/api/bookings/ViewServiceBookings/:booking_id?userId=${userId}`
+          ),
+        ]);
+
+      const [bookings, payments, testDrives, serviceBookings] =
+        await Promise.all([
+          bookingsRes.ok ? bookingsRes.json() : [],
+          paymentsRes.ok ? paymentsRes.json() : [],
+          testDrivesRes.ok ? testDrivesRes.json() : [],
+          serviceBookingsRes.ok ? serviceBookingsRes.json() : [],
+        ]);
+
+      setUserData({
+        bookings: transformDecimalFields(bookings),
+        payments: transformDecimalFields(payments),
+        testDrives,
+        serviceBookings,
+      });
     } catch (err) {
-      console.error("Error fetching bookings:", err);
+      console.error("Error fetching user data:", err);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const transformDecimalFields = (data) => {
+    return data.map((item) => {
+      const transformed = { ...item };
+      for (const key in transformed) {
+        if (transformed[key]?.$numberDecimal) {
+          transformed[key] = transformed[key].$numberDecimal;
+        }
+      }
+      return transformed;
+    });
   };
 
   const formatDate = (dateString) => {
@@ -71,11 +110,39 @@ function Dashboard() {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     }).format(date);
+  };
+
+  const formatDateOnly = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(date);
+  };
+
+  const formatTimeOnly = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  };
+
+  const formatCurrency = (amount) => {
+    if (!amount) return "$0.00";
+    const num = typeof amount === "string" ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(num);
   };
 
   const getGreeting = () => {
@@ -86,135 +153,594 @@ function Dashboard() {
   };
 
   const toTitleCase = (str) =>
-    str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+    str ? str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) : "";
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-4">
-      <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8 space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-gray-800">{greeting}</h1>
-          <p className="text-lg text-gray-600">Hi, {name}</p>
+  const toggleExpandItem = (type, id) => {
+    setExpandedItems((prev) => ({
+      ...prev,
+      [`${type}-${id}`]: !prev[`${type}-${id}`],
+    }));
+  };
+
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      pending: {
+        color: "bg-yellow-100 text-yellow-800",
+        icon: <Clock className="w-3 h-3" />,
+      },
+      confirmed: {
+        color: "bg-blue-100 text-blue-800",
+        icon: <CheckCircle className="w-3 h-3" />,
+      },
+      completed: {
+        color: "bg-green-100 text-green-800",
+        icon: <CheckCircle className="w-3 h-3" />,
+      },
+      canceled: {
+        color: "bg-red-100 text-red-800",
+        icon: <X className="w-3 h-3" />,
+      },
+      cancelled: {
+        color: "bg-red-100 text-red-800",
+        icon: <X className="w-3 h-3" />,
+      },
+      paid: {
+        color: "bg-green-100 text-green-800",
+        icon: <CheckCircle className="w-3 h-3" />,
+      },
+      success: {
+        color: "bg-green-100 text-green-800",
+        icon: <CheckCircle className="w-3 h-3" />,
+      },
+      failed: {
+        color: "bg-red-100 text-red-800",
+        icon: <AlertCircle className="w-3 h-3" />,
+      },
+      refunded: {
+        color: "bg-purple-100 text-purple-800",
+        icon: <DollarSign className="w-3 h-3" />,
+      },
+      Pending: {
+        color: "bg-yellow-100 text-yellow-800",
+        icon: <Clock className="w-3 h-3" />,
+      },
+      Confirmed: {
+        color: "bg-blue-100 text-blue-800",
+        icon: <CheckCircle className="w-3 h-3" />,
+      },
+      Completed: {
+        color: "bg-green-100 text-green-800",
+        icon: <CheckCircle className="w-3 h-3" />,
+      },
+      Cancelled: {
+        color: "bg-red-100 text-red-800",
+        icon: <X className="w-3 h-3" />,
+      },
+    };
+
+    const config = statusMap[status] || {
+      color: "bg-gray-100 text-gray-800",
+      icon: <Info className="w-3 h-3" />,
+    };
+
+    return (
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${config.color}`}
+      >
+        {config.icon}
+        {status}
+      </span>
+    );
+  };
+
+  const renderTabContent = () => {
+    const data = userData[activeTab];
+
+    if (isLoading) {
+      return (
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
         </div>
+      );
+    }
 
-        <div className="space-y-4">
-          <Link
-            to="/Profile"
-            className="flex items-center gap-3 bg-gray-100 hover:bg-gray-200 p-3 rounded-xl transition"
-          >
-            <User className="w-5 h-5 text-gray-700" />
-            <span className="font-medium">
-              Your Profile
-              <p className="text-sm text-gray-500">
-                View and edit your information
-              </p>
-            </span>
-          </Link>
-
-          <Link
-            to="/ChangePassword"
-            className="flex items-center gap-3 bg-gray-100 hover:bg-gray-200 p-3 rounded-xl transition"
-          >
-            <Key className="w-5 h-5 text-gray-700" />
-            <span className="font-medium">
-              Change Password
-              <p className="text-sm text-gray-500">
-                Update your security settings
-              </p>
-            </span>
-          </Link>
-
-          <button
-            onClick={() => {
-              if (!showBookings) fetchBookings();
-              setShowBookings(!showBookings);
-            }}
-            className="flex items-center gap-3 w-full bg-gray-100 hover:bg-gray-200 p-3 rounded-xl transition"
-          >
-            <Calendar className="w-5 h-5 text-gray-700" />
-            <span className="font-medium text-left">
-              Show Booking Details
-              <p className="text-sm text-gray-500">
-                View your bookings and payment details
-              </p>
-            </span>
-          </button>
-
-          <button
-            onClick={logout}
-            className="flex items-center gap-3 w-full bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl transition"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Logout</span>
-          </button>
+    if (!data || data.length === 0) {
+      return (
+        <div className="text-center py-12 text-gray-500">
+          <p className="text-lg">
+            No {activeTab.replace(/([A-Z])/g, " $1").toLowerCase()} found
+          </p>
+          <p className="text-sm mt-2">
+            You don't have any{" "}
+            {activeTab.replace(/([A-Z])/g, " $1").toLowerCase()} yet
+          </p>
         </div>
-      </div>
+      );
+    }
 
-      {showBookings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6 space-y-4">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Booking Details
-              </h2>
-              <button
-                onClick={() => setShowBookings(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            {isLoading ? (
-              <p className="text-center text-gray-600">Loading bookings...</p>
-            ) : bookings.length > 0 ? (
-              <div className="space-y-4 overflow-y-auto max-h-96 pr-1">
-                {bookings.map((booking, index) => (
-                  <div
-                    key={index}
-                    className="p-4 bg-gray-50 rounded-lg shadow-sm"
-                  >
-                    <p className="font-medium text-gray-900">
-                      Booking #{booking.booking_id}
-                    </p>
-                    <p className="text-gray-900">
-                      Transaction ID: {booking.transaction_id}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Date: {formatDate(booking.booking_start_date)}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Booking Status: {booking.booking_status}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Payment Status: {booking.payment_status}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Total Amount: ${booking.total_price}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Paid Amount: ${booking.paid_price}
-                    </p>
-                    {booking.payment && (
-                      <div className="mt-2">
-                        <p className="text-sm font-medium text-gray-900">
-                          Payment Details
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Amount: ${booking.payment.amount}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Status: {booking.payment.status}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
+    switch (activeTab) {
+      case "bookings":
+        return data.map((booking) => (
+          <div
+            key={booking.booking_id}
+            className="border border-gray-200 rounded-lg overflow-hidden mb-4"
+          >
+            <div
+              className="p-4 bg-white hover:bg-gray-50 cursor-pointer flex justify-between items-center"
+              onClick={() => toggleExpandItem("booking", booking.booking_id)}
+            >
+              <div className="flex items-center gap-3">
+                <CarIcon className="w-5 h-5 text-blue-500" />
+                <div>
+                  <p className="font-medium">Booking #{booking.booking_id}</p>
+                  <p className="text-sm text-gray-500">
+                    {formatDateOnly(booking.booking_start_date)} -{" "}
+                    {formatDateOnly(booking.booking_end_date)}
+                  </p>
+                </div>
               </div>
-            ) : (
-              <p className="text-center text-gray-600">No bookings found</p>
+              <div className="flex items-center gap-3">
+                {getStatusBadge(booking.booking_status)}
+                {expandedItems[`booking-${booking.booking_id}`] ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </div>
+            </div>
+
+            {expandedItems[`booking-${booking.booking_id}`] && (
+              <div className="p-4 bg-gray-50 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Car ID</p>
+                    <p className="font-medium">{booking.car_id}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Listing ID</p>
+                    <p className="font-medium">{booking.listing_id}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Start Date</p>
+                    <p className="font-medium">
+                      {formatDate(booking.booking_start_date)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">End Date</p>
+                    <p className="font-medium">
+                      {formatDate(booking.booking_end_date)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Total Price</p>
+                    <p className="font-medium">
+                      {formatCurrency(booking.total_price)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Paid Amount</p>
+                    <p className="font-medium">
+                      {formatCurrency(booking.paid_price)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Booking Status</p>
+                    <div className="mt-1">
+                      {getStatusBadge(booking.booking_status)}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Payment Status</p>
+                    <div className="mt-1">
+                      {getStatusBadge(booking.payment_status)}
+                    </div>
+                  </div>
+                </div>
+
+                {booking.transaction_id && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-xs text-gray-500">Transaction ID</p>
+                    <p className="font-mono text-sm">
+                      {booking.transaction_id}
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
           </div>
+        ));
+
+      case "payments":
+        return data.map((payment) => (
+          <div
+            key={payment.transaction_id}
+            className="border border-gray-200 rounded-lg overflow-hidden mb-4"
+          >
+            <div
+              className="p-4 bg-white hover:bg-gray-50 cursor-pointer flex justify-between items-center"
+              onClick={() =>
+                toggleExpandItem("payment", payment.transaction_id)
+              }
+            >
+              <div className="flex items-center gap-3">
+                <CreditCard className="w-5 h-5 text-green-500" />
+                <div>
+                  <p className="font-medium">
+                    Payment #{payment.transaction_id}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {formatDate(payment.date_of_payment)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {getStatusBadge(payment.payment_status)}
+                {expandedItems[`payment-${payment.transaction_id}`] ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </div>
+            </div>
+
+            {expandedItems[`payment-${payment.transaction_id}`] && (
+              <div className="p-4 bg-gray-50 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Amount</p>
+                    <p className="font-medium">
+                      {formatCurrency(payment.amount)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Method</p>
+                    <p className="capitalize">
+                      {payment.payment_method.replace("_", " ")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Date</p>
+                    <p className="font-medium">
+                      {formatDate(payment.date_of_payment)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Status</p>
+                    <div className="mt-1">
+                      {getStatusBadge(payment.payment_status)}
+                    </div>
+                  </div>
+                </div>
+
+                {payment.booking_id && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <p className="text-xs text-gray-500">Related Booking ID</p>
+                    <p className="font-medium">{payment.booking_id}</p>
+                  </div>
+                )}
+
+                {payment.car_id && (
+                  <div className="mt-2">
+                    <p className="text-xs text-gray-500">Related Car ID</p>
+                    <p className="font-medium">{payment.car_id}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ));
+
+      case "testDrives":
+        return data.map((testDrive) => (
+          <div
+            key={testDrive.test_drive_id}
+            className="border border-gray-200 rounded-lg overflow-hidden mb-4"
+          >
+            <div
+              className="p-4 bg-white hover:bg-gray-50 cursor-pointer flex justify-between items-center"
+              onClick={() =>
+                toggleExpandItem("testDrive", testDrive.test_drive_id)
+              }
+            >
+              <div className="flex items-center gap-3">
+                <TestTube2 className="w-5 h-5 text-purple-500" />
+                <div>
+                  <p className="font-medium">
+                    Test Drive #{testDrive.test_drive_id}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {formatDateOnly(testDrive.preferred_date)} at{" "}
+                    {testDrive.preferred_time}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {getStatusBadge(testDrive.status)}
+                {expandedItems[`testDrive-${testDrive.test_drive_id}`] ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </div>
+            </div>
+
+            {expandedItems[`testDrive-${testDrive.test_drive_id}`] && (
+              <div className="p-4 bg-gray-50 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Car ID</p>
+                    <p className="font-medium">{testDrive.car_id}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Status</p>
+                    <div className="mt-1">
+                      {getStatusBadge(testDrive.status)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Date</p>
+                    <p className="font-medium">
+                      {formatDateOnly(testDrive.preferred_date)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Time</p>
+                    <p className="font-medium">{testDrive.preferred_time}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-500">Location</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <MapPin className="w-4 h-4 text-gray-500" />
+                    <p className="font-medium">
+                      {testDrive.preferred_location}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ));
+
+      case "serviceBookings":
+        return data.map((service) => (
+          <div
+            key={service._id}
+            className="border border-gray-200 rounded-lg overflow-hidden mb-4"
+          >
+            <div
+              className="p-4 bg-white hover:bg-gray-50 cursor-pointer flex justify-between items-center"
+              onClick={() => toggleExpandItem("service", service._id)}
+            >
+              <div className="flex items-center gap-3">
+                <Wrench className="w-5 h-5 text-orange-500" />
+                <div>
+                  <p className="font-medium">{service.serviceType}</p>
+                  <p className="text-sm text-gray-500">
+                    {formatDateOnly(service.preferredDate)} at{" "}
+                    {service.preferredTime}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {getStatusBadge(service.status)}
+                {expandedItems[`service-${service._id}`] ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </div>
+            </div>
+
+            {expandedItems[`service-${service._id}`] && (
+              <div className="p-4 bg-gray-50 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Vehicle</p>
+                    <p className="font-medium">
+                      {service.vehicleBrand} {service.vehicleModel}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">License Plate</p>
+                    <p className="font-mono">{service.licensePlate}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Date</p>
+                    <p className="font-medium">
+                      {formatDateOnly(service.preferredDate)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Time</p>
+                    <p className="font-medium">{service.preferredTime}</p>
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <p className="text-xs text-gray-500">Service Type</p>
+                  <p className="font-medium">{service.serviceType}</p>
+                </div>
+
+                {service.additionalNotes && (
+                  <div>
+                    <p className="text-xs text-gray-500">Additional Notes</p>
+                    <p className="text-sm">{service.additionalNotes}</p>
+                  </div>
+                )}
+
+                <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Contact</p>
+                    <p className="font-medium">{service.contactNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Email</p>
+                    <p className="font-medium">{service.email || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ));
+
+      default:
+        return null;
+    }
+  };
+
+  const logout = () => {
+    localStorage.clear();
+    navigate("/Login");
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {greeting}, {name}
+            </h1>
+            <p className="text-gray-600">
+              Here's an overview of your activities
+            </p>
+          </div>
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Logout</span>
+          </button>
         </div>
-      )}
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Sidebar Navigation */}
+          <div className="lg:col-span-1 space-y-4">
+            <Link
+              to="/Profile"
+              className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition"
+            >
+              <User className="w-5 h-5 text-blue-500" />
+              <span className="font-medium">My Profile</span>
+            </Link>
+
+            <Link
+              to="/ChangePassword"
+              className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition"
+            >
+              <Key className="w-5 h-5 text-green-500" />
+              <span className="font-medium">Change Password</span>
+            </Link>
+
+            {/* Quick Stats */}
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <h3 className="font-medium mb-3">Quick Stats</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Bookings</span>
+                  <span className="font-medium">
+                    {userData.bookings.length}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Test Drives</span>
+                  <span className="font-medium">
+                    {userData.testDrives.length}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Services</span>
+                  <span className="font-medium">
+                    {userData.serviceBookings.length}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Panel */}
+          <div className="lg:col-span-3">
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              {/* Tabs */}
+              <div className="border-b border-gray-200">
+                <nav className="flex -mb-px">
+                  <button
+                    onClick={() => setActiveTab("bookings")}
+                    className={`py-4 px-6 text-center border-b-2 font-medium text-sm flex items-center gap-2 ${
+                      activeTab === "bookings"
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    <Car className="w-4 h-4" />
+                    Bookings
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("payments")}
+                    className={`py-4 px-6 text-center border-b-2 font-medium text-sm flex items-center gap-2 ${
+                      activeTab === "payments"
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    Payments
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("testDrives")}
+                    className={`py-4 px-6 text-center border-b-2 font-medium text-sm flex items-center gap-2 ${
+                      activeTab === "testDrives"
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    <TestTube2 className="w-4 h-4" />
+                    Test Drives
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("serviceBookings")}
+                    className={`py-4 px-6 text-center border-b-2 font-medium text-sm flex items-center gap-2 ${
+                      activeTab === "serviceBookings"
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    <Settings className="w-4 h-4" />
+                    Services
+                  </button>
+                </nav>
+              </div>
+
+              {/* Tab Content */}
+              <div className="p-4">{renderTabContent()}</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

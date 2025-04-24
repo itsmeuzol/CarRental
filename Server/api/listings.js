@@ -5,7 +5,7 @@ const multer = require("multer");
 const CarListing = require("../models/CarListing"); // Path to CarListing model
 const mongoose = require("mongoose");
 const Review = require("../models/Review");
-
+const TestDrive = require("../models/TestDrive"); // adjust path if needed
 const router = express.Router();
 
 // Set up storage engine for multer
@@ -55,6 +55,8 @@ router.post("/listings", upload, async (req, res) => {
     const newCarListing = new CarListing({
       ...req.body,
       images: imagePaths,
+      RentSell: "Auction",
+      auctionEndTime: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now
     });
 
     const savedListing = await newCarListing.save();
@@ -207,26 +209,52 @@ router.delete("/listings/:id", async (req, res) => {
   }
 });
 
-router.post("/listings/:id", (req, res) => {
-  const { id } = req.params;
-  const { date, time, location } = req.body;
+router.post("/test-drives/schedule/:car_id", async (req, res) => {
+  const { car_id } = req.params;
+  const { date, time, location, user_id } = req.body;
 
   if (!date?.trim() || !time?.trim() || !location?.trim()) {
     return res.status(400).json({ error: "All fields are required." });
   }
 
-  // Simulate saving to database or further processing
-  console.log(
-    `Test drive scheduled for car ${id} on ${date} at ${time} in ${location}`
-  );
+  try {
+    const testDrive = new TestDrive({
+      car_id: parseInt(car_id),
+      user_id: user_id || null, // optional
+      preferred_date: new Date(date),
+      preferred_time: time,
+      preferred_location: location,
+    });
 
-  res.status(200).json({
-    message: "Test drive scheduled successfully",
-    carId: id,
-    date,
-    time,
-    location,
-  });
+    await testDrive.save();
+
+    res.status(201).json({
+      message: "Test drive scheduled successfully",
+      data: testDrive,
+    });
+  } catch (err) {
+    console.error("Error saving test drive:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Route to fetch all scheduled test drives
+router.get("/test-drives/user/:user_id", async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const testDrives = await TestDrive.find({ user_id });
+    if (!testDrives.length) {
+      return res
+        .status(404)
+        .json({ message: "No test drives found for this user." });
+    }
+
+    res.status(200).json(testDrives);
+  } catch (err) {
+    console.error("Error fetching user test drives:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 module.exports = router;

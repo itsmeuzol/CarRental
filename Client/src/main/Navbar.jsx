@@ -10,11 +10,13 @@ function Navbar() {
   const [theme, setTheme] = useState("light");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [role, setRole] = useState(null);
 
   useEffect(() => {
-    // Check for user ID in localStorage
     const userId = localStorage.getItem("id");
-    setIsAuthenticated(!!userId); // Set authentication status based on the presence of user ID
+    const userRole = localStorage.getItem("role");
+    setIsAuthenticated(!!userId);
+    setRole(userRole);
   }, []);
 
   const toggleTheme = () => {
@@ -118,24 +120,100 @@ function Navbar() {
         </div>
 
         <nav className="px-4 pt-6 pb-6 space-y-2">
-          {[
-            { to: "/", label: "Home" },
-            { to: "/#services", label: "Services" },
-            { to: "/AboutUs", label: "About Us" },
-            { to: "/ContactUs", label: "Contact Us" },
-            { to: "/Dashboard", label: "Dashboard" },
-            { to: "/CarExplore", label: "Explore Cars" },
-            { to: "/SellCar", label: "Sell Car" },
-          ].map((item, index) => (
+          <Link
+            to="/"
+            className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
+            onClick={closeMenu}
+          >
+            Home
+          </Link>
+
+          <Link
+            to="/#services"
+            className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
+            onClick={closeMenu}
+          >
+            Services
+          </Link>
+
+          {role !== "staff" ? (
+            <>
+              <Link
+                to="/AboutUs"
+                className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
+                onClick={closeMenu}
+              >
+                About Us
+              </Link>
+
+              <Link
+                to="/Contact"
+                className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
+                onClick={closeMenu}
+              >
+                Contact Us
+              </Link>
+
+              <Link
+                to="/CarExplore"
+                className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
+                onClick={closeMenu}
+              >
+                Explore Cars
+              </Link>
+              <Link
+                to="/BookServicing"
+                className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
+                onClick={closeMenu}
+              >
+                Book Servicing
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/ViewServiceBookings"
+                className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
+                onClick={closeMenu}
+              >
+                View Service Bookings
+              </Link>
+
+              <Link
+                to="/TestDriveBookings"
+                className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
+                onClick={closeMenu}
+              >
+                Schedule Test Drive Bookings
+              </Link>
+
+              <Link
+                to="/RentalBookings"
+                className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
+                onClick={closeMenu}
+              >
+                Rental Bookings
+              </Link>
+            </>
+          )}
+
+          <Link
+            to="/Dashboard"
+            className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
+            onClick={closeMenu}
+          >
+            Dashboard
+          </Link>
+
+          {role === "staff" && (
             <Link
-              key={index}
-              to={item.to}
+              to="/SellCar"
               className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
               onClick={closeMenu}
             >
-              {item.label}
+              Sell Car
             </Link>
-          ))}
+          )}
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700">

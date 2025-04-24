@@ -56,6 +56,8 @@ function Login() {
           const id = response.data.id;
           localStorage.setItem("name", name);
           localStorage.setItem("id", id);
+          const role = response.data.role; // Define role from response data
+          localStorage.setItem("role", role);
           window.location = "/Dashboard";
         } else {
           alert("You entered the wrong email ID or password");

@@ -1,34 +1,26 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+
 import { ArrowRight, Camera, Loader2 } from "lucide-react";
 import axios from "axios";
 import UserAuth from "../auth/UserAuth";
 import API_BASE_URL from "../config/apiConfig";
 
 function SellCar() {
+  const navigate = useNavigate(); // Initialize navigate
+
   const [step, setStep] = useState(1);
   const [selectedImages, setSelectedImages] = useState([]);
   const [imageUrls, setImageUrls] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const storedUserId = localStorage.getItem("id");
-  // useEffect(() => {
-
-  //   if (storedUserId) {
-  //     setFormData(prevFormData => ({
-  //       ...prevFormData,
-  //       user_id: storedUserId  // Keep it as a string
-  //     }));
-  //   } else {
-  //     setError('User ID not found. Please log in again.');
-  //   }
-  // }, []);
 
   const userId = localStorage.getItem("id");
 
   const [formData, setFormData] = useState({
     user_id: String(userId),
     listing_status: "requested",
-    owner: "",
     RentSell: "",
     make: "",
     model: "",
@@ -115,59 +107,12 @@ function SellCar() {
     }
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setIsSubmitting(true);
-  //   setError('');
-
-  //   try {
-  //     const formDataToSend = new FormData();
-
-  //     Object.keys(formData).forEach(key => {
-  //       if (typeof formData[key] === 'object' && formData[key] !== null) {
-  //         formDataToSend.append(key, JSON.stringify(formData[key]));
-  //       } else {
-  //         formDataToSend.append(key, formData[key]);
-  //       }
-  //     });
-
-  //     selectedImages.forEach((image, index) => {
-  //       formDataToSend.append('images', image);
-  //     });
-
-  //     const response = await fetch('${API_BASE_URL}/api/listings/listings', {
-  //       method: 'POST',
-  //       body: formDataToSend,
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error('Failed to create listing');
-  //     }
-
-  //     const data = await response.json();
-  //     console.log('Listing created:', data);
-
-  //     alert('Your car listing has been successfully created!');
-
-  //   } catch (err) {
-  //     setError(err.message || 'An error occurred while creating the listing');
-  //     console.error('Submission error:', err);
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
 
     try {
-      // Validate user ID before submission
-      // if (!formData.user_id) {
-      //   throw new Error('User ID is missing. Please log in again.');
-      // }
-
       const formDataToSend = new FormData();
 
       Object.keys(formData).forEach((key) => {
@@ -196,6 +141,7 @@ function SellCar() {
       console.log("Listing created:", data);
 
       alert("Your car listing request has been successfully processed!");
+      navigate("/"); // Redirect to the home page after successful submission
     } catch (err) {
       setError(err.message || "An error occurred while creating the listing");
       console.error("Submission error:", err);
@@ -211,34 +157,6 @@ function SellCar() {
   const prevStep = () => setStep(step - 1);
 
   const validateStep = (currentStep) => {
-    // switch (currentStep) {
-    //   case 1:
-    //     if (!formData.owner || !formData.RentSell || !formData.make ||
-    //       !formData.model || !formData.year || !formData.mileage ||
-    //       !formData.price || !formData.location) {
-    //       setError('Please fill in all required fields');
-    //       return false;
-    //     }
-    //     break;
-    //   case 2:
-    //     if (!formData.engine || !formData.transmission || !formData.fuelType ||
-    //       !formData.seatingCapacity || !formData.exteriorColor ||
-    //       !formData.interiorColor || !formData.carType ||
-    //       !formData.condition) {
-    //       setError('Please fill in all required fields');
-    //       return false;
-    //     }
-    //     break;
-    //   case 4:
-    //     if (selectedImages.length === 0) {
-    //       setError('Please upload at least one image');
-    //       return false;
-    //     }
-    //     break;
-    //   default:
-    //     setError('');
-    //     return true;
-    // }
     setError("");
     return true;
   };
@@ -248,7 +166,7 @@ function SellCar() {
       <header className="bg-white dark:bg-gray-800 shadow transition-colors duration-200">
         <div className="container mx-auto px-4 py-6">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-            Sell Your Car Hassle-Free
+            Place Your Car Hassle-Free
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-300">
             Reach thousands of potential buyers with our quick and easy listing
@@ -312,26 +230,10 @@ function SellCar() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label
-                    htmlFor="owner"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Owner
-                  </label>
-                  <input
-                    type="number"
-                    id="owner"
-                    value={formData.owner}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors duration-200"
-                    placeholder="Enter Owners"
-                  />
-                </div>
-                <div>
-                  <label
                     htmlFor="RentSell"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Rent or Sell
+                    Rent or Sell or Auction
                   </label>
                   <select
                     id="RentSell"
@@ -342,6 +244,7 @@ function SellCar() {
                     <option value="">Select</option>
                     <option value="Sell">Sell</option>
                     <option value="Rent">Rent</option>
+                    <option value="Auction">Auction</option>
                   </select>
                 </div>
                 <div>
@@ -583,109 +486,7 @@ function SellCar() {
                     <option value="convertible">Convertible</option>
                   </select>
                 </div>
-                <div>
-                  <label
-                    htmlFor="vin"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    VIN{" "}
-                    <span className="text-gray-500 dark:text-gray-400 text-sm">
-                      (Optional)
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    id="vin"
-                    value={formData.vin}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors duration-200"
-                    placeholder="Enter VIN number"
-                  />
-                </div>
               </div>
-
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Vehicle Condition
-                </label>
-                <div className="mt-2">
-                  <select
-                    name="condition"
-                    id="condition"
-                    value={formData.condition || ""}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors duration-200"
-                  >
-                    <option value="">Select Condition</option>
-                    <option value="Excellent">Excellent</option>
-                    <option value="Good">Good</option>
-                    <option value="Fair">Fair</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Service History
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <label className="inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      id="serviceHistory.recentServicing"
-                      checked={formData.serviceHistory.recentServicing}
-                      onChange={handleInputChange}
-                      className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
-                    />
-                    <span className="ml-2 text-gray-700 dark:text-gray-300">
-                      Recent servicing
-                    </span>
-                  </label>
-                  <label className="inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      id="serviceHistory.noAccidentHistory"
-                      checked={formData.serviceHistory.noAccidentHistory}
-                      onChange={handleInputChange}
-                      className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
-                    />
-                    <span className="ml-2 text-gray-700 dark:text-gray-300">
-                      No accident history
-                    </span>
-                  </label>
-                  <label className="inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      id="serviceHistory.modifications"
-                      checked={formData.serviceHistory.modifications}
-                      onChange={handleInputChange}
-                      className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
-                    />
-                    <span className="ml-2 text-gray-700 dark:text-gray-300">
-                      Modifications
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              {formData.serviceHistory.modifications && (
-                <div className="mt-4">
-                  <label
-                    htmlFor="modificationDetails"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Modification Details
-                  </label>
-                  <textarea
-                    id="modificationDetails"
-                    value={formData.modificationDetails || ""}
-                    onChange={handleInputChange}
-                    rows={3}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors duration-200"
-                    placeholder="Please describe any modifications made to the vehicle"
-                  />
-                </div>
-              )}
             </div>
           )}
 
@@ -760,7 +561,7 @@ function SellCar() {
                   onChange={handleInputChange}
                   rows={4}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors duration-200"
-                  placeholder="Describe the car's condition, any unique features, or recent upgrades"
+                  placeholder="Describe the car's feature, any unique updates"
                 ></textarea>
               </div>
             </div>

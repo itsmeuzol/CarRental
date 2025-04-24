@@ -21,13 +21,9 @@ const CarListingSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  owner: {
-    type: Number,
-    required: false,
-  },
   RentSell: {
     type: String,
-    enum: ["Rent", "Sell"],
+    enum: ["Rent", "Sell", "Auction"],
     required: false,
   },
   make: {
@@ -54,11 +50,7 @@ const CarListingSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  condition: {
-    type: String,
-    enum: ["Excellent", "Good", "Fair"],
-    required: false,
-  },
+
   date_posted: {
     type: Date,
     default: Date.now,
@@ -103,15 +95,7 @@ const CarListingSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  vin: {
-    type: String,
-    required: false,
-  },
-  serviceHistory: {
-    recentServicing: { type: Boolean, default: false },
-    noAccidentHistory: { type: Boolean, default: false },
-    modifications: { type: Boolean, default: false },
-  },
+
   extraFeatures: {
     gps: { type: Boolean, default: false },
     sunroof: { type: Boolean, default: false },
@@ -126,6 +110,22 @@ const CarListingSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  auctionEndTime: {
+    type: Date,
+    required: function () {
+      return this.RentSell === "Auction";
+    },
+  },
+  winner: {
+    user_id: {
+      type: mongoose.Schema.Types.ObjectId, // Reference to the User model
+      ref: "Users", // Name of the User model
+    },
+    bidAmount: {
+      type: Number,
+    },
+  },
+  // For auction listings
   images: [
     {
       url: { type: String, required: false },

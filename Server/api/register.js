@@ -1,15 +1,19 @@
 //api/register.js
-const express = require('express');
-const bcrypt = require('bcrypt');
-const Users = require('../models/Users');
+const express = require("express");
+const bcrypt = require("bcrypt");
+const Users = require("../models/Users");
 
 const router = express.Router();
 
-router.post('/register', async (req, res) => {
-  const { name, email, mobileno, password } = req.body;
+router.post("/register", async (req, res) => {
+  const { name, email, mobileno, password, role = "staff" } = req.body;
 
   if (!name || !email || !mobileno || !password) {
     return res.status(400).json({ message: "All fields are required." });
+  }
+
+  if (!["user", "staff", "admin"].includes(role)) {
+    return res.status(400).json({ message: "Invalid role specified." });
   }
 
   try {
@@ -19,34 +23,42 @@ router.post('/register', async (req, res) => {
       email,
       mobile: mobileno,
       password: hashedPassword,
-      status:'active'
+      role,
+      status: "active",
     });
 
     await users.save();
     res.status(200).json({ message: "Registration successful." });
   } catch (error) {
     console.error("Error during registration: ", error);
-    res.status(500).json({ message: "Registration failed. Email might already be in use." });
+    res
+      .status(500)
+      .json({ message: "Registration failed. Email might already be in use." });
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    console.log('Login attempt for email:', email);
+    console.log("Login attempt for email:", email);
     const user = await Users.findOne({ email });
-    
+
     if (user) {
       const passwordMatch = await bcrypt.compare(password, user.password);
-      
+
       if (passwordMatch) {
         user.lastLogin = new Date();
         await user.save();
-        return res.json({ flag: "1", name: user.name, id: user._id });
+        return res.json({
+          flag: "1",
+          name: user.name,
+          id: user._id,
+          role: user.role,
+        });
       }
     }
-    
+
     return res.json({ flag: "0", message: "Invalid email or password." });
   } catch (error) {
     console.error("Login error: ", error);

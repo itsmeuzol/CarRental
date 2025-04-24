@@ -1,44 +1,42 @@
-import React, { useState } from 'react';
-import emailjs from 'emailjs-com';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import React, { useState } from "react";
+import emailjs from "emailjs-com";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { Car, Mail, User, MessageSquare } from "lucide-react";
-// import './Contact.css';
-// import './media.css';
 
 const ContactUs = () => {
-  document.title = "Contact | Mohit";
+  document.title = "Contact";
 
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
   });
 
   const [formErrors, setFormErrors] = useState({});
-  const [formStatus, setFormStatus] = useState('');
+  const [formStatus, setFormStatus] = useState("");
   const [validFields, setValidFields] = useState({
     name: false,
     email: false,
     subject: false,
-    message: false
+    message: false,
   });
 
   const validateField = (name, value) => {
     let isValid = true;
     switch (name) {
-      case 'name':
-        isValid = value.trim() !== '';
+      case "name":
+        isValid = value.trim() !== "";
         break;
-      case 'email':
+      case "email":
         isValid = /\S+@\S+\.\S+/.test(value);
         break;
-      case 'subject':
-        isValid = value.trim() !== '';
+      case "subject":
+        isValid = value.trim() !== "";
         break;
-      case 'message':
-        isValid = value.trim() !== '';
+      case "message":
+        isValid = value.trim() !== "";
         break;
       default:
         break;
@@ -53,7 +51,7 @@ const ContactUs = () => {
     const isValid = validateField(name, value);
     setValidFields({ ...validFields, [name]: isValid });
 
-    setFormErrors({ ...formErrors, [name]: isValid ? '' : formErrors[name] });
+    setFormErrors({ ...formErrors, [name]: isValid ? "" : formErrors[name] });
   };
 
   const validateForm = () => {
@@ -61,7 +59,9 @@ const ContactUs = () => {
     Object.keys(formData).forEach((field) => {
       const isValid = validateField(field, formData[field]);
       if (!isValid) {
-        errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is invalid.`;
+        errors[field] = `${
+          field.charAt(0).toUpperCase() + field.slice(1)
+        } is invalid.`;
       }
     });
     return errors;
@@ -75,32 +75,41 @@ const ContactUs = () => {
       return;
     }
 
-    setFormStatus('Submitting...');
+    setFormStatus("Submitting...");
 
-    emailjs.send('service_isfonxb', 'template_zc2fn7i', formData, '89pcl6Blv6ZJ33wZk')
-      .then((response) => {
-        console.log('SUCCESS!', response.status, response.text);
-        setFormStatus('');
-        setFormData({
-          name: '',
-          email: '',
-          subject: '',
-          message: ''
-        });
-        setFormErrors({});
-        setValidFields({
-          name: false,
-          email: false,
-          subject: false,
-          message: false
-        });
-        toast.success('Your message was sent, thank you!');
-        toast.success('I will soon contact you');
-      }, (error) => {
-        console.log('FAILED...', error);
-        setFormStatus('');
-        toast.error('Something went wrong. Please try again.');
-      });
+    emailjs
+      .send(
+        "service_lgw35k6",
+        "template_5og35je",
+        formData,
+        "ONjVU4JX02FTox56b"
+      )
+      .then(
+        (response) => {
+          console.log("SUCCESS!", response.status, response.text);
+          setFormStatus("");
+          setFormData({
+            name: "",
+            email: "",
+            subject: "",
+            message: "",
+          });
+          setFormErrors({});
+          setValidFields({
+            name: false,
+            email: false,
+            subject: false,
+            message: false,
+          });
+          toast.success("Your message was sent, thank you!");
+          toast.success("We will soon contact you");
+        },
+        (error) => {
+          console.log("FAILED...", error);
+          setFormStatus("");
+          toast.error("Something went wrong. Please try again.");
+        }
+      );
   };
 
   return (
@@ -111,7 +120,9 @@ const ContactUs = () => {
             <Car size={36} />
             <div>
               <h2 className="text-3xl font-bold">Contact Us</h2>
-              <p className="text-blue-100">We're here to assist you with your automotive needs</p>
+              <p className="text-blue-100">
+                We're here to assist you with your automotive needs
+              </p>
             </div>
           </div>
         </div>
@@ -121,42 +132,122 @@ const ContactUs = () => {
               {formStatus}
             </div>
           )}
-          <form onSubmit={handleSubmit} id="contactForm" name="contactForm" className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            id="contactForm"
+            name="contactForm"
+            className="space-y-6"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium text-gray-700 flex items-center">
+                <label
+                  htmlFor="name"
+                  className="text-sm font-medium text-gray-700 flex items-center"
+                >
                   <User size={18} className="mr-2" /> Name
                 </label>
                 <div className="relative">
-                  <input type="text" name="name" id="name" placeholder="Your Name" value={formData.name} onChange={handleChange} autoComplete="off" className={`w-full pl-10 py-2 px-3 border rounded-md ${formErrors.name ? 'border-red-500' : validFields.name ? 'border-green-500' : 'border-gray-300'}`}
+                  <input
+                    type="text"
+                    name="name"
+                    id="name"
+                    placeholder="Your Name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    autoComplete="off"
+                    className={`w-full pl-10 py-2 px-3 border rounded-md ${
+                      formErrors.name
+                        ? "border-red-500"
+                        : validFields.name
+                        ? "border-green-500"
+                        : "border-gray-300"
+                    }`}
                   />
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <User
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                 </div>
-                {formErrors.name && <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>}
+                {formErrors.name && (
+                  <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium text-gray-700 flex items-center">
+                <label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-700 flex items-center"
+                >
                   <Mail size={18} className="mr-2" /> Email
                 </label>
                 <div className="relative">
-                  <input type="email" name="email" id="email" placeholder="Your Email" value={formData.email} onChange={handleChange} autoComplete="off" className={`w-full pl-10 py-2 px-3 border rounded-md ${formErrors.email ? 'border-red-500' : validFields.email ? 'border-green-500' : 'border-gray-300'}`} />
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    placeholder="Your Email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    autoComplete="off"
+                    className={`w-full pl-10 py-2 px-3 border rounded-md ${
+                      formErrors.email
+                        ? "border-red-500"
+                        : validFields.email
+                        ? "border-green-500"
+                        : "border-gray-300"
+                    }`}
+                  />
+                  <Mail
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                 </div>
-                {formErrors.email && <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>}
+                {formErrors.email && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {formErrors.email}
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
-              <label htmlFor="subject" className="text-sm font-medium text-gray-700 flex items-center">
+              <label
+                htmlFor="subject"
+                className="text-sm font-medium text-gray-700 flex items-center"
+              >
                 <Car size={18} className="mr-2" /> Subject
               </label>
               <div className="relative">
-                <input type="text" name="subject" id="subject" placeholder="e.g., Inquiry about a specific car" value={formData.subject} onChange={handleChange} autoComplete="off" className={`w-full pl-10 py-2 px-3 border rounded-md ${formErrors.subject ? 'border-red-500' : validFields.subject ? 'border-green-500' : 'border-gray-300'}`} />
-                <Car className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  name="subject"
+                  id="subject"
+                  placeholder="e.g., Inquiry, Servicing"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  autoComplete="off"
+                  className={`w-full pl-10 py-2 px-3 border rounded-md ${
+                    formErrors.subject
+                      ? "border-red-500"
+                      : validFields.subject
+                      ? "border-green-500"
+                      : "border-gray-300"
+                  }`}
+                />
+                <Car
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={18}
+                />
               </div>
-              {formErrors.subject && <p className="mt-1 text-sm text-red-500">{formErrors.subject}</p>}
+              {formErrors.subject && (
+                <p className="mt-1 text-sm text-red-500">
+                  {formErrors.subject}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
-              <label htmlFor="message" className="text-sm font-medium text-gray-700 flex items-center">
+              <label
+                htmlFor="message"
+                className="text-sm font-medium text-gray-700 flex items-center"
+              >
                 <MessageSquare size={18} className="mr-2" /> Message
               </label>
               <div className="relative">
@@ -168,23 +259,49 @@ const ContactUs = () => {
                   value={formData.message}
                   onChange={handleChange}
                   autoComplete="off"
-                  className={`w-full pl-10 py-2 px-3 border rounded-md ${formErrors.message ? 'border-red-500' : validFields.message ? 'border-green-500' : 'border-gray-300'}`}
+                  className={`w-full pl-10 py-2 px-3 border rounded-md ${
+                    formErrors.message
+                      ? "border-red-500"
+                      : validFields.message
+                      ? "border-green-500"
+                      : "border-gray-300"
+                  }`}
                 />
-                <MessageSquare className="absolute left-3 top-3 text-gray-400" size={18} />
+                <MessageSquare
+                  className="absolute left-3 top-3 text-gray-400"
+                  size={18}
+                />
               </div>
-              {formErrors.message && <p className="mt-1 text-sm text-red-500">{formErrors.message}</p>}
+              {formErrors.message && (
+                <p className="mt-1 text-sm text-red-500">
+                  {formErrors.message}
+                </p>
+              )}
             </div>
             <div>
-              <button type="submit" className="w-full bg-black hover:bg-black text-white font-semibold py-3 rounded-md transition duration-300 ease-in-out transform hover:scale-105">
+              <button
+                type="submit"
+                className="w-full bg-black hover:bg-black text-white font-semibold py-3 rounded-md transition duration-300 ease-in-out transform hover:scale-105"
+              >
                 Send Message
               </button>
             </div>
           </form>
         </div>
       </div>
-      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
-}
+};
 
 export default ContactUs;

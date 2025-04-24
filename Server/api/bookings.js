@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const Booking = require("../models/Booking");
+
+const ServiceBooking = require("../models/serviceBooking");
+
 const db = require("../db");
 const { ObjectId } = require("mongodb");
 
@@ -141,6 +144,87 @@ router.delete("/:id", async (req, res) => {
     res.json({ message: "Booking deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+//service booking part
+// Create a new service booking
+router.post("/bookServicing", async (req, res) => {
+  const {
+    userId,
+    fullName,
+    contactNumber,
+    email,
+    vehicleBrand,
+    vehicleModel,
+    licensePlate,
+    preferredDate,
+    preferredTime,
+    serviceType,
+    additionalNotes,
+  } = req.body;
+
+  // Validate required fields
+  if (
+    !userId ||
+    !fullName ||
+    !contactNumber ||
+    !vehicleBrand ||
+    !vehicleModel ||
+    !licensePlate ||
+    !preferredDate ||
+    !preferredTime ||
+    !serviceType
+  ) {
+    return res.status(400).json({
+      message:
+        "Missing required fields. Please ensure all fields are filled correctly.",
+    });
+  }
+
+  try {
+    const newServiceBooking = new ServiceBooking({
+      userId,
+      fullName,
+      contactNumber,
+      email,
+      vehicleBrand,
+      vehicleModel,
+      licensePlate,
+      preferredDate,
+      preferredTime,
+      serviceType,
+      additionalNotes,
+      status: "Pending", // Default
+    });
+
+    const result = await newServiceBooking.save();
+
+    res.status(201).json({
+      message: "Service booking created successfully",
+      booking: result,
+    });
+  } catch (err) {
+    console.error("Error creating service booking:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Example Express route for fetching service bookings
+router.get("/ViewServiceBookings/:booking_id", async (req, res) => {
+  try {
+    // Fetch all service bookings from the ServiceBooking model
+    const bookings = await ServiceBooking.find(); // This fetches all bookings
+
+    if (!bookings || bookings.length === 0) {
+      return res.status(404).json({ message: "No service bookings found." });
+    }
+
+    // Send the fetched data as JSON
+    res.json(bookings);
+  } catch (err) {
+    console.error("Error fetching bookings:", err); // Log the error for debugging
+    res.status(500).json({ error: "Unable to fetch service bookings" });
   }
 });
 

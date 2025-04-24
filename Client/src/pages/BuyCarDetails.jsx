@@ -62,8 +62,7 @@ export default function CarDetails() {
           seatingCapacity: data.seatingCapacity || "NA",
           exteriorColor: data.exteriorColor || "NA",
           interiorColor: data.interiorColor || "NA",
-          vin: data.vin || "NA",
-          owner: data.owner || "NA",
+
           certificationReport: data.certificationReport || "NA",
           extraFeatures: {
             gps: data.extraFeatures?.gps || false,
@@ -154,16 +153,20 @@ export default function CarDetails() {
     const time = form.time.value;
     const location = form.location.value;
 
-    const requestBody = { date, time, location };
+    const userId = localStorage.getItem("id");
+
+    const requestBody = { date, time, location, user_id: userId };
 
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/api/listings/listings/${id}`,
+        `${API_BASE_URL}/api/listings/test-drives/schedule/${id}`,
         requestBody
       );
 
       console.log("Test drive response:", response.data);
       alert(response.data.message || "Test drive scheduled successfully!");
+
+      form.reset(); // Reset the form after successful submission
     } catch (error) {
       console.error("Error scheduling test drive:", error);
       alert(error.response?.data?.error || "Failed to schedule test drive.");
@@ -337,9 +340,6 @@ export default function CarDetails() {
                       { label: "Exterior Color", value: car.exteriorColor },
                       { label: "Interior Color", value: car.interiorColor },
                       { label: "Car Type", value: car.carType },
-                      { label: "VIN", value: car.vin },
-                      { label: "Condition", value: car.certificationReport },
-                      { label: "Owners", value: car.owner },
                     ].map((spec, index) => (
                       <div key={index} className="flex flex-col">
                         <span className="text-sm text-gray-500 dark:text-gray-400 mb-1">
@@ -378,29 +378,30 @@ export default function CarDetails() {
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-3xl p-8">
                   <h2 className="text-3xl font-bold mb-6 text-primary dark:text-gray-100">
-                    Vehicle History
+                    Vehicle Overview
                   </h2>
                   <div className="space-y-6">
                     {[
                       {
                         icon: CircleAlert,
                         title: "Ownership",
-                        description: "1 previous owner (lease vehicle)",
+                        description: "Brand new vehicle – no previous owners",
                       },
                       {
                         icon: CheckCircle2,
                         title: "Accident History",
-                        description: "No accidents or damage reported",
+                        description: "No accidents – fresh from manufacturer",
                       },
                       {
                         icon: CheckCircle2,
                         title: "Service Records",
-                        description: "Regular maintenance up to date",
+                        description:
+                          "Factory-verified pre-delivery inspection completed",
                       },
                       {
                         icon: Clock,
-                        title: "Last Service",
-                        description: "3 months ago",
+                        title: "Showroom Arrival",
+                        description: "Just arrived this week",
                       },
                     ].map((item, index) => (
                       <div key={index} className="flex items-start space-x-4">
@@ -417,6 +418,7 @@ export default function CarDetails() {
                     ))}
                   </div>
                 </div>
+
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-3xl p-8">
                   <h2 className="text-3xl font-bold mb-6 text-primary dark:text-gray-100">
                     Condition Summary
@@ -424,20 +426,20 @@ export default function CarDetails() {
                   <div className="flex items-center mb-4">
                     <CheckCircle className="w-6 h-6 text-green-500 dark:text-green-400 mr-2" />
                     <span className="font-semibold text-2xl dark:text-gray-200">
-                      Certified Pre-Owned
+                      Brand New Condition
                     </span>
                   </div>
                   <p className="text-gray-700 dark:text-gray-300 mb-4 text-lg">
-                    This vehicle has undergone a rigorous inspection and
-                    reconditioning process. It is in excellent condition and
-                    comes with an extended warranty.
+                    This showroom vehicle is in pristine, brand-new condition.
+                    It meets all manufacturer standards and is ready for
+                    immediate delivery.
                   </p>
                   <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 text-lg font-medium">
-                    <li>Regular maintenance up to date</li>
-                    <li>No accident history reported</li>
-                    <li>New tires installed recently</li>
-                    <li>Minor wear on driver's seat (see images)</li>
-                    <li>Small paint touch-up on rear bumper</li>
+                    <li>Zero mileage</li>
+                    <li>No prior ownership</li>
+                    <li>Manufacturer warranty included</li>
+                    <li>Full factory inspection completed</li>
+                    <li>Ready for registration and delivery</li>
                   </ul>
                 </div>
               </div>
@@ -490,7 +492,7 @@ export default function CarDetails() {
                           Proceed to Payment
                         </button>
                       </Link>
-                      <Link to="/contactUs" className="block">
+                      <Link to="/contact" className="block">
                         <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background dark:bg-gray-700 hover:bg-accent hover:text-accent-foreground dark:hover:bg-gray-600 h-10 px-4 py-2 w-full btn-secondary">
                           Contact Us
                         </button>

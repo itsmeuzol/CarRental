@@ -83,13 +83,14 @@ function Footers() {
                   </a>
                 </li>
                 <li>
-                  <a href="../SellCar" className="quick_links">
-                    Sell Your Car
+                  <a href="../CarRental" className="quick_links">
+                    Servicing
                   </a>
                 </li>
+
                 <li>
                   <a href="../ComingSoon" className="quick_links">
-                    Car Financing
+                    Participate in Auction
                   </a>
                 </li>
               </ul>
@@ -103,7 +104,7 @@ function Footers() {
                   </a>
                 </li>
                 <li>
-                  <a href="../ContactUs" className="quick_links">
+                  <a href="../Contact" className="quick_links">
                     Contact Us
                   </a>
                 </li>
