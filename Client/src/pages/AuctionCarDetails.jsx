@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import API_BASE_URL from "../config/apiConfig";
 
 function AuctionCarDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [car, setCar] = useState(null);
   const [bidAmount, setBidAmount] = useState("");
   const [message, setMessage] = useState("");
@@ -13,6 +14,10 @@ function AuctionCarDetails() {
 
   useEffect(() => {
     const fetchCar = async () => {
+      if (isNaN(id)) {
+        navigate("/");
+        return;
+      }
       try {
         const response = await axios.get(
           `${API_BASE_URL}/api/listings/listings/${id}`
@@ -152,7 +157,11 @@ function AuctionCarDetails() {
               Auction Ends: {new Date(auctionEndTime).toLocaleString()}
             </p>
           )}
-          {highestBid && (
+          {!highestBid || isNaN(parseFloat(highestBid)) ? (
+            <p className="text-md font-medium text-gray-500 mb-2">
+              No bids have been placed
+            </p>
+          ) : (
             <p className="text-md font-medium text-blue-700 mb-2">
               Current Highest Bid: ₹{parseFloat(highestBid).toLocaleString()}
             </p>

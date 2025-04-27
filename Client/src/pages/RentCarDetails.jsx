@@ -57,6 +57,11 @@ export default function RentCarDetails() {
 
   useEffect(() => {
     const fetchCarDetails = async () => {
+      if (isNaN(id)) {
+        navigate("/");
+        return;
+      }
+
       try {
         const response = await fetch(
           `${API_BASE_URL}/api/listings/listings/${id}`

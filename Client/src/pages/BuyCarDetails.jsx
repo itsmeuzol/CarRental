@@ -35,6 +35,12 @@ export default function CarDetails() {
 
   useEffect(() => {
     const fetchCarDetails = async () => {
+      // 👇 ADD this check first
+      if (isNaN(id)) {
+        navigate("/");
+        return;
+      }
+
       try {
         const response = await fetch(
           `${API_BASE_URL}/api/listings/listings/${id}`
@@ -45,7 +51,7 @@ export default function CarDetails() {
         const data = await response.json();
         if (!data) throw new Error("No data received");
 
-        // ✅ Parse extraFeatures here
+        // ✅ Same rest of your code
         let parsedExtraFeatures = {};
         if (typeof data.extraFeatures === "string") {
           try {
@@ -80,8 +86,6 @@ export default function CarDetails() {
           exteriorColor: data.exteriorColor || "NA",
           interiorColor: data.interiorColor || "NA",
           certificationReport: data.certificationReport || "NA",
-
-          // ✅ Use parsed features
           extraFeatures: {
             gps: parsedExtraFeatures.gps || false,
             sunroof: parsedExtraFeatures.sunroof || false,
