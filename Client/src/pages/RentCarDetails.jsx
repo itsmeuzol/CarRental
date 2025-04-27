@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,11 +15,12 @@ import {
   DollarSign,
   Maximize,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import TermsAndConditions from "../legal/terms&conditions";
 import API_BASE_URL from "../config/apiConfig";
 
 export default function RentCarDetails() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -109,6 +111,15 @@ export default function RentCarDetails() {
 
     fetchCarDetails();
   }, [id]);
+
+  const handleProceedToPayment = (carId) => {
+    const userId = localStorage.getItem("id");
+    if (!userId) {
+      toast.error("You need to login to rent.");
+    } else {
+      navigate(`/payment/${car.id}`);
+    }
+  };
 
   const calculateTotalPrice = () => {
     if (!startDate || !endDate) return 0;
@@ -279,9 +290,6 @@ export default function RentCarDetails() {
                         </button>
                       </>
                     )}
-                    {/* <button className="absolute top-4 right-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition duration-300">
-                                            <Maximize className="w-6 h-6" />
-                                        </button> */}
                   </div>
                 </div>
               </div>
@@ -623,12 +631,13 @@ export default function RentCarDetails() {
                     </div>
 
                     <div className="space-y-2">
-                      <Link to={`/payment/${car.id}`} className="block w-full">
-                        <button className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-primary/90 transition duration-300 flex items-center justify-center">
-                          <DollarSign className="w-5 h-5 mr-2" />
-                          Reserve Now
-                        </button>
-                      </Link>
+                      <button
+                        onClick={() => handleProceedToPayment(car.id)}
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-white bg-black dark:bg-gray-200 dark:text-gray-800 hover:bg-primary/90 dark:hover:bg-gray-300 h-10 px-4 py-2 w-full btn-primary"
+                      >
+                        <DollarSign className="w-5 h-5 mr-2" />
+                        Reserve Now
+                      </button>
                       <Link to="/contact" className="block w-full">
                         <button className="w-full bg-gray-100 text-secondary py-2 px-4 rounded-md hover:bg-secondary/20 transition duration-300">
                           Contact Us

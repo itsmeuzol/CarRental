@@ -11,14 +11,14 @@
 
 ## Overview
 
-The **Second Hand Car Marketplace and Renting System** is a web-based platform designed to facilitate the buying, selling, and renting of used cars. It aims to connect car owners, buyers, and renters in a seamless and secure environment, providing tools for transparent transactions and efficient management of car listings.
+The **Second Hand Car Marketplace and Renting System** is a web-based platform designed to facilitate the buying, Listing, and renting of used cars. It aims to connect car owners, buyers, and renters in a seamless and secure environment, providing tools for transparent transactions and efficient management of car listings.
 
 ## Features
 
 ### Marketplace
 
-- **User Registration and Authentication:** Secure sign-up and login system for buyers, sellers, and renters.
-- **Car Listings:** Sellers can post detailed listings with car specifications, photos, and pricing.
+- **User Registration and Authentication:** Secure sign-up and login system for buyers, Listers, and renters.
+- **Car Listings:** Listers can post detailed listings with car specifications, photos, and pricing.
 - **Search and Filters:** Advanced search and filtering options for buyers to find cars based on criteria like make, model, price range, and location.
 
 ### Renting System

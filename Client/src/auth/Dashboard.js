@@ -34,6 +34,8 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState("bookings");
   const [expandedItems, setExpandedItems] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const isStaff = localStorage.getItem("role") === "staff";
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,16 +62,34 @@ function Dashboard() {
     setIsLoading(true);
     try {
       const userId = localStorage.getItem("id");
+      const userRole = localStorage.getItem("role"); // You need to save role when logging in.
 
-      // Fetch all data in parallel
+      const bookingsURL =
+        userRole === "staff"
+          ? `${API_BASE_URL}/api/bookings`
+          : `${API_BASE_URL}/api/bookings/uid?user_id=${userId}`;
+
+      const paymentsURL =
+        userRole === "staff"
+          ? `${API_BASE_URL}/payments`
+          : `${API_BASE_URL}/payments/userID?user_id=${userId}`;
+
+      const testDrivesURL =
+        userRole === "staff"
+          ? `${API_BASE_URL}/api/listings/test-drives`
+          : `${API_BASE_URL}/api/listings/test-drives/user/${userId}`;
+
+      const serviceBookingsURL =
+        userRole === "staff"
+          ? `${API_BASE_URL}/api/bookings//ViewServiceBookings/:booking_id`
+          : `${API_BASE_URL}/api/bookings/ViewServiceBookings/user/${userId}`;
+
       const [bookingsRes, paymentsRes, testDrivesRes, serviceBookingsRes] =
         await Promise.all([
-          fetch(`${API_BASE_URL}/api/bookings?user_id=${userId}`),
-          fetch(`${API_BASE_URL}/payments?user_id=${userId}`),
-          fetch(`${API_BASE_URL}/api/listings/test-drives/user/${userId}`),
-          fetch(
-            `${API_BASE_URL}/api/bookings/ViewServiceBookings/:booking_id?userId=${userId}`
-          ),
+          fetch(bookingsURL),
+          fetch(paymentsURL),
+          fetch(testDrivesURL),
+          fetch(serviceBookingsURL),
         ]);
 
       const [bookings, payments, testDrives, serviceBookings] =
@@ -272,7 +292,9 @@ function Dashboard() {
               <div className="flex items-center gap-3">
                 <CarIcon className="w-5 h-5 text-blue-500" />
                 <div>
-                  <p className="font-medium">Booking #{booking.booking_id}</p>
+                  <p className="font-medium">
+                    Rental Booking #{booking.booking_id}
+                  </p>
                   <p className="text-sm text-gray-500">
                     {formatDateOnly(booking.booking_start_date)} -{" "}
                     {formatDateOnly(booking.booking_end_date)}
@@ -297,8 +319,22 @@ function Dashboard() {
                     <p className="font-medium">{booking.car_id}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Listing ID</p>
-                    <p className="font-medium">{booking.listing_id}</p>
+                    <p className="text-xs text-gray-500">Car Type</p>
+                    <p className="font-medium">
+                      {booking.carDetails?.carType || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Car Type</p>
+                    <p className="font-medium">
+                      {booking.carDetails?.model || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Fuel Type</p>
+                    <p className="font-medium">
+                      {booking.carDetails?.fuelType || "N/A"}
+                    </p>
                   </div>
                 </div>
 
@@ -345,6 +381,22 @@ function Dashboard() {
                       {getStatusBadge(booking.payment_status)}
                     </div>
                   </div>
+                  {isStaff && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-gray-500">Booked By</p>
+                        <p className="font-medium">
+                          {booking.userDetails?.name || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">User Email</p>
+                        <p className="font-medium">
+                          {booking.userDetails?.email || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {booking.transaction_id && (
@@ -409,7 +461,6 @@ function Dashboard() {
                     </p>
                   </div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div>
                     <p className="text-xs text-gray-500">Date</p>
@@ -425,17 +476,21 @@ function Dashboard() {
                   </div>
                 </div>
 
-                {payment.booking_id && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="text-xs text-gray-500">Related Booking ID</p>
-                    <p className="font-medium">{payment.booking_id}</p>
-                  </div>
-                )}
-
-                {payment.car_id && (
-                  <div className="mt-2">
-                    <p className="text-xs text-gray-500">Related Car ID</p>
-                    <p className="font-medium">{payment.car_id}</p>
+                {/* ➡️ Only show this if staff */}
+                {isStaff && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500">Payment By</p>
+                      <p className="font-medium">
+                        {payment.userDetails?.name || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">User Email</p>
+                      <p className="font-medium">
+                        {payment.userDetails?.email || "N/A"}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -479,10 +534,21 @@ function Dashboard() {
 
             {expandedItems[`testDrive-${testDrive.test_drive_id}`] && (
               <div className="p-4 bg-gray-50 border-t border-gray-200">
+                {/* car and date info */}
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div>
                     <p className="text-xs text-gray-500">Car ID</p>
                     <p className="font-medium">{testDrive.car_id}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Car Type</p>
+                    <p className="font-medium">
+                      {testDrive.carDetails?.carType}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Car Model</p>
+                    <p className="font-medium">{testDrive.carDetails?.model}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Status</p>
@@ -505,7 +571,7 @@ function Dashboard() {
                   </div>
                 </div>
 
-                <div>
+                <div className="mb-3">
                   <p className="text-xs text-gray-500">Location</p>
                   <div className="flex items-center gap-1 mt-1">
                     <MapPin className="w-4 h-4 text-gray-500" />
@@ -514,6 +580,24 @@ function Dashboard() {
                     </p>
                   </div>
                 </div>
+
+                {/* ➡️ Only show this if staff */}
+                {isStaff && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500">User Name</p>
+                      <p className="font-medium">
+                        {testDrive.userDetails?.name || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">User Email</p>
+                      <p className="font-medium">
+                        {testDrive.userDetails?.email || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -583,22 +667,29 @@ function Dashboard() {
                 </div>
 
                 {service.additionalNotes && (
-                  <div>
+                  <div className="mb-3">
                     <p className="text-xs text-gray-500">Additional Notes</p>
                     <p className="text-sm">{service.additionalNotes}</p>
                   </div>
                 )}
 
-                <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500">Contact</p>
-                    <p className="font-medium">{service.contactNumber}</p>
+                {/* Show User Details only for Staff */}
+                {isStaff && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500">Booked By</p>
+                      <p className="font-medium">
+                        {service.userDetails?.name || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">User Email</p>
+                      <p className="font-medium">
+                        {service.userDetails?.email || "N/A"}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Email</p>
-                    <p className="font-medium">{service.email || "N/A"}</p>
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>
@@ -608,10 +699,12 @@ function Dashboard() {
         return null;
     }
   };
-
   const logout = () => {
+    // Clear all storage
     localStorage.clear();
-    navigate("/Login");
+    sessionStorage.clear();
+
+    window.location.href = "/Login";
   };
 
   return (
@@ -661,19 +754,21 @@ function Dashboard() {
               <h3 className="font-medium mb-3">Quick Stats</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Bookings</span>
+                  <span className="text-sm text-gray-500">Rental Bookings</span>
                   <span className="font-medium">
                     {userData.bookings.length}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Test Drives</span>
+                  <span className="text-sm text-gray-500">
+                    Test Drives Bookings
+                  </span>
                   <span className="font-medium">
                     {userData.testDrives.length}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Services</span>
+                  <span className="text-sm text-gray-500">Servicing</span>
                   <span className="font-medium">
                     {userData.serviceBookings.length}
                   </span>
@@ -697,7 +792,7 @@ function Dashboard() {
                     }`}
                   >
                     <Car className="w-4 h-4" />
-                    Bookings
+                    Rental Bookings
                   </button>
                   <button
                     onClick={() => setActiveTab("payments")}
@@ -719,7 +814,7 @@ function Dashboard() {
                     }`}
                   >
                     <TestTube2 className="w-4 h-4" />
-                    Test Drives
+                    Test Drive Bookings
                   </button>
                   <button
                     onClick={() => setActiveTab("serviceBookings")}
@@ -730,7 +825,7 @@ function Dashboard() {
                     }`}
                   >
                     <Settings className="w-4 h-4" />
-                    Services
+                    Servicing
                   </button>
                 </nav>
               </div>

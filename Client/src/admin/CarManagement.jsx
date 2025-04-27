@@ -20,6 +20,9 @@ import API_BASE_URL from "../config/apiConfig";
 
 function CarManagement() {
   const [listings, setListings] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
+
   const [showAddEditModal, setShowAddEditModal] = useState(false);
   const [showViewModel, setShowViewModel] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -95,6 +98,9 @@ function CarManagement() {
       );
     }
   };
+  const handleImageChange = (e) => {
+    setNewImages([...e.target.files]);
+  };
 
   const handleEditListing = async (listing) => {
     if (!listing || !listing.listing_id) {
@@ -106,15 +112,18 @@ function CarManagement() {
       const response = await axios.get(
         `${API_BASE_URL}/api/listings/listings/${listing.listing_id}`
       );
+      console.log("Fetched listing for edit:", response.data);
       if (!response.data) {
         throw new Error("No data returned from the server");
       }
       setSelectedListing(response.data);
+      setExistingImages(response.data.images || []);
+
       setFormData({
         make: response.data.make || "",
         model: response.data.model || "",
         year: response.data.year?.toString() || "",
-        price: response.data.price?.toString() || "",
+        price: response.data.price?.$numberDecimal?.toString() || "",
         carType: response.data.carType || "Select Category",
         mileage: response.data.mileage?.toString() || "",
         fuelType: response.data.fuelType || "Select Fuel Type",
@@ -135,12 +144,35 @@ function CarManagement() {
 
   const handleSaveListing = async (e) => {
     e.preventDefault();
+
+    const formPayload = new FormData();
+
+    // Append text fields
+    for (let key in formData) {
+      formPayload.append(key, formData[key]);
+    }
+
+    // Append existing image metadata (if needed by server, e.g., to retain them)
+    existingImages.forEach((img, index) => {
+      formPayload.append("existingImages[]", JSON.stringify(img));
+    });
+
+    // Append new image files
+    newImages.forEach((file) => {
+      formPayload.append("images", file);
+    });
+
     try {
-      console.log("Sending form data:", formData);
       const response = await axios.put(
         `${API_BASE_URL}/api/listings/listings/${selectedListing.listing_id}`,
-        formData
+        formPayload,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
+
       if (response.status === 200) {
         alert("Listing updated successfully!");
         setShowAddEditModal(false);
@@ -229,6 +261,12 @@ function CarManagement() {
     setSearchTerm(e.target.value);
   };
 
+  const handleRemoveImage = (indexToRemove) => {
+    setExistingImages((prevImages) =>
+      prevImages.filter((_, index) => index !== indexToRemove)
+    );
+  };
+
   const getImageUrl = (image) => {
     if (!image) return "/default-car-image.jpg";
     if (Array.isArray(image) && image.length > 0) {
@@ -298,6 +336,8 @@ function CarManagement() {
                   <option>SUV</option>
                   <option>Sedan</option>
                   <option>Truck</option>
+                  <option>Van</option>
+                  <option>Other</option>
                 </select>
               </div>
 
@@ -372,6 +412,7 @@ function CarManagement() {
                   "Category",
                   "Price",
                   "Status",
+                  "Purpose",
                   "Actions",
                 ].map((h) => (
                   <th key={h} className="py-2 px-4 border-b text-left">
@@ -428,6 +469,10 @@ function CarManagement() {
                         {listing.listing_status || "N/A"}
                       </span>
                     </td>
+                    <td className="py-2 px-4 border-b">
+                      {listing.RentList || "N/A"}
+                    </td>
+
                     <td className="py-2 px-4 border-b flex space-x-2">
                       <button
                         onClick={() => handleEditListing(listing)}
@@ -456,9 +501,9 @@ function CarManagement() {
         </div>
 
         {showAddEditModal && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-lg shadow-lg w-3/4 max-w-3xl p-6">
-              <div className="flex justify-between items-center border-b pb-4 mb-4">
+          <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50 px-4">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6">
+              <div className="sticky top-0 bg-white z-10 pb-4 mb-4 border-b flex justify-between items-center">
                 <h2 className="text-xl font-bold">Edit Car Listing</h2>
                 <button onClick={handleCloseModal}>
                   <X size={20} />
@@ -640,13 +685,34 @@ function CarManagement() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Images
+                      Existing Images
                     </label>
+                    <div className="flex gap-4 flex-wrap mb-2">
+                      {existingImages.map((img, index) => (
+                        <div key={index} className="w-24 h-24 relative group">
+                          <img
+                            src={API_BASE_URL + img.url}
+                            alt={`Car ${index + 1}`}
+                            className="object-cover w-full h-full rounded"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition"
+                            title="Remove image"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
                     <input
                       type="file"
                       multiple
                       name="images"
                       className="p-2 border rounded w-full"
+                      onChange={handleImageChange}
                     />
                   </div>
 
@@ -689,7 +755,13 @@ function CarManagement() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Price:</h3>
-                    <p>₹{selectedListing.price?.toLocaleString()}</p>
+                    <p>
+                      ₹
+                      {Number(
+                        selectedListing.price?.$numberDecimal ||
+                          selectedListing.price
+                      ).toLocaleString()}
+                    </p>
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Car Type:</h3>

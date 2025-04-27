@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
   ChevronRight,
   Heart,
@@ -29,6 +31,7 @@ export default function CarDetails() {
   const [loanTerm, setLoanTerm] = useState(60);
   const [interestRate, setInterestRate] = useState(3.5);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCarDetails = async () => {
@@ -38,8 +41,22 @@ export default function CarDetails() {
         );
         if (!response.ok)
           throw new Error(`HTTP error! status: ${response.status}`);
+
         const data = await response.json();
         if (!data) throw new Error("No data received");
+
+        // ✅ Parse extraFeatures here
+        let parsedExtraFeatures = {};
+        if (typeof data.extraFeatures === "string") {
+          try {
+            parsedExtraFeatures = JSON.parse(data.extraFeatures);
+          } catch (e) {
+            console.error("Failed to parse extraFeatures:", e);
+            parsedExtraFeatures = {};
+          }
+        } else {
+          parsedExtraFeatures = data.extraFeatures || {};
+        }
 
         const transformedCar = {
           id: data.listing_id,
@@ -62,13 +79,14 @@ export default function CarDetails() {
           seatingCapacity: data.seatingCapacity || "NA",
           exteriorColor: data.exteriorColor || "NA",
           interiorColor: data.interiorColor || "NA",
-
           certificationReport: data.certificationReport || "NA",
+
+          // ✅ Use parsed features
           extraFeatures: {
-            gps: data.extraFeatures?.gps || false,
-            sunroof: data.extraFeatures?.sunroof || false,
-            leatherSeats: data.extraFeatures?.leatherSeats || false,
-            backupCamera: data.extraFeatures?.backupCamera || false,
+            gps: parsedExtraFeatures.gps || false,
+            sunroof: parsedExtraFeatures.sunroof || false,
+            leatherSeats: parsedExtraFeatures.leatherSeats || false,
+            backupCamera: parsedExtraFeatures.backupCamera || false,
           },
         };
 
@@ -86,6 +104,15 @@ export default function CarDetails() {
       sessionStorage.setItem("currentListingId", id);
     }
   }, [id]);
+
+  const handleProceedToPayment = (carId) => {
+    const userId = localStorage.getItem("id");
+    if (!userId) {
+      toast.error("You need to login to pay.");
+    } else {
+      navigate(`/payment/${car.id}`);
+    }
+  };
 
   const calculateMonthlyPayment = () => {
     if (!car) return "0";
@@ -154,6 +181,11 @@ export default function CarDetails() {
     const location = form.location.value;
 
     const userId = localStorage.getItem("id");
+
+    if (!userId) {
+      alert("You need to login first to schedule a test drive.");
+      return; // Stop further execution
+    }
 
     const requestBody = { date, time, location, user_id: userId };
 
@@ -241,17 +273,12 @@ export default function CarDetails() {
             </div>
 
             <div className="space-y-4 justify-center">
-              <div
-                className="flex justify-center items-center"
-                style={{ width: "100%" }}
-              >
-                <div
-                  className="relative aspect-video rounded-3xl overflow-hidden"
-                  style={{ width: "calc(100% - 100px)", padding: "10px" }}
-                >
+              {/* Main Image Viewer */}
+              <div className="flex justify-center items-center w-full px-4">
+                <div className="relative aspect-video w-full max-w-4xl rounded-3xl overflow-hidden">
                   <div className="relative w-full h-full">
                     <img
-                      alt="Car image"
+                      alt={`Car ${car.make} ${car.model}`}
                       src={car.images[currentImageIndex]}
                       className="absolute inset-0 w-full h-full object-contain rounded-2xl"
                     />
@@ -281,17 +308,13 @@ export default function CarDetails() {
                         </button>
                       </>
                     )}
-                    {/* <button className="absolute top-4 right-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition duration-300">
-                      <Maximize className="w-6 h-6" />
-                    </button> */}
                   </div>
                 </div>
               </div>
-              <div className="flex justify-center">
-                <div
-                  className="grid grid-cols-4 gap-4"
-                  style={{ width: "80%", maxWidth: "600px" }}
-                >
+
+              {/* Thumbnail Gallery */}
+              <div className="flex justify-center mt-4">
+                <div className="grid grid-cols-4 gap-4 w-full max-w-xl">
                   {car.images.slice(0, 4).map((image, index) => (
                     <button
                       key={index}
@@ -301,15 +324,11 @@ export default function CarDetails() {
                           ? "ring-4 ring-primary dark:ring-primary-dark"
                           : "hover:opacity-75"
                       }`}
-                      style={{
-                        width: "calc(100% - 10px)",
-                        height: "calc(100% - 10px)",
-                      }}
                     >
                       <img
-                        alt={`Car image ${index + 1}`}
+                        alt={`Car ${car.make} ${car.model} - View ${index + 1}`}
                         src={image}
-                        className="absolute inset-0 w-full h-full object-contain"
+                        className="absolute inset-0 w-full h-full object-cover"
                       />
                     </button>
                   ))}
@@ -357,18 +376,17 @@ export default function CarDetails() {
                         </span>
                         <ul className="list-disc list-inside">
                           {Object.entries(car.extraFeatures)
-                            .filter(([_, value]) => value) // Only include features that are true
+                            .filter(
+                              ([_, value]) => value === true || value === "true"
+                            )
                             .map(([key]) => (
                               <li
                                 key={key}
                                 className="font-medium text-lg dark:text-gray-200"
                               >
                                 {key
-                                  .replace(/([A-Z])/g, " $1") // Convert camelCase to Title Case
-                                  .replace(/^./, (str) =>
-                                    str.toUpperCase()
-                                  )}{" "}
-                                {/* Capitalize the first letter */}
+                                  .replace(/([A-Z])/g, " $1")
+                                  .replace(/^./, (str) => str.toUpperCase())}
                               </li>
                             ))}
                         </ul>
@@ -486,12 +504,14 @@ export default function CarDetails() {
                       )}
                     </div>
                     <div className="space-y-4">
-                      <Link to={`/payment/${car.id}`} className="block">
-                        <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-white bg-black dark:bg-gray-200 dark:text-gray-800 hover:bg-primary/90 dark:hover:bg-gray-300 h-10 px-4 py-2 w-full btn-primary">
-                          <DollarSign className="w-5 h-5 mr-2" />
-                          Proceed to Payment
-                        </button>
-                      </Link>
+                      <button
+                        onClick={() => handleProceedToPayment(car.id)}
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-white bg-black dark:bg-gray-200 dark:text-gray-800 hover:bg-primary/90 dark:hover:bg-gray-300 h-10 px-4 py-2 w-full btn-primary"
+                      >
+                        <DollarSign className="w-5 h-5 mr-2" />
+                        Proceed to Payment
+                      </button>
+
                       <Link to="/contact" className="block">
                         <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background dark:bg-gray-700 hover:bg-accent hover:text-accent-foreground dark:hover:bg-gray-600 h-10 px-4 py-2 w-full btn-secondary">
                           Contact Us

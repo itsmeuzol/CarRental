@@ -20,7 +20,7 @@ import Loader from "./main/Loader";
 import CarExplore from "./pages/CarExplore";
 import BuyCarDetails from "./pages/BuyCarDetails";
 import RentCarDetails from "./pages/RentCarDetails";
-import SellCar from "./pages/SellCar";
+import ListCar from "./pages/ListCar";
 import Payment from "./pages/Payment";
 import ComingSoon from "./ComingSoon";
 import AuctionCarDetails from "./pages/AuctionCarDetails";
@@ -130,7 +130,7 @@ function App() {
           <Route path="/CarExplore" element={<CarExplore />} />
           <Route path="/BuyCarDetails" element={<BuyCarDetails />} />
           <Route path="/RentCarDetails" element={<RentCarDetails />} />
-          <Route path="/SellCar" element={<SellCar />} />
+          <Route path="/ListCar" element={<ListCar />} />
           <Route path="/auction-car/:id" element={<AuctionCarDetails />} />
 
           <Route path="/ComingSoon" element={<ComingSoon />} />

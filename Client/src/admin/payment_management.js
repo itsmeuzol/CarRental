@@ -6,9 +6,9 @@ export default function CarTransactions() {
   const [selectedTransaction, setSelectedTransaction] = useState(null)
 
   const transactions = [
-    { id: 'TRX001', buyer: 'John Doe', seller: 'Car Dealership A', car: 'Tesla Model 3', amount: 45000, date: '2023-06-15', status: 'Completed' },
-    { id: 'TRX002', buyer: 'Jane Smith', seller: 'Car Dealership B', car: 'Ford F-150', amount: 55000, date: '2023-06-14', status: 'Pending' },
-    { id: 'TRX003', buyer: 'Bob Johnson', seller: 'Car Dealership C', car: 'Toyota RAV4', amount: 35000, date: '2023-06-13', status: 'Failed' },
+    { id: 'TRX001', buyer: 'John Doe', Lister: 'Car Dealership A', car: 'Tesla Model 3', amount: 45000, date: '2023-06-15', status: 'Completed' },
+    { id: 'TRX002', buyer: 'Jane Smith', Lister: 'Car Dealership B', car: 'Ford F-150', amount: 55000, date: '2023-06-14', status: 'Pending' },
+    { id: 'TRX003', buyer: 'Bob Johnson', Lister: 'Car Dealership C', car: 'Toyota RAV4', amount: 35000, date: '2023-06-13', status: 'Failed' },
     // Add more transaction data as needed
   ]
 
@@ -56,7 +56,7 @@ export default function CarTransactions() {
             <tr>
               <th className="py-2 px-4 border-b text-left">Transaction ID</th>
               <th className="py-2 px-4 border-b text-left">Buyer</th>
-              <th className="py-2 px-4 border-b text-left">Seller</th>
+              <th className="py-2 px-4 border-b text-left">Lister</th>
               <th className="py-2 px-4 border-b text-left">Car</th>
               <th className="py-2 px-4 border-b text-left">Amount</th>
               <th className="py-2 px-4 border-b text-left">Date</th>
@@ -68,7 +68,7 @@ export default function CarTransactions() {
               <tr key={transaction.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleViewTransaction(transaction)}>
                 <td className="py-2 px-4 border-b">{transaction.id}</td>
                 <td className="py-2 px-4 border-b">{transaction.buyer}</td>
-                <td className="py-2 px-4 border-b">{transaction.seller}</td>
+                <td className="py-2 px-4 border-b">{transaction.Lister}</td>
                 <td className="py-2 px-4 border-b">{transaction.car}</td>
                 <td className="py-2 px-4 border-b">${transaction.amount.toLocaleString()}</td>
                 <td className="py-2 px-4 border-b">{transaction.date}</td>
@@ -133,9 +133,9 @@ export default function CarTransactions() {
               </div>
 
               <div>
-                <h3 className="font-semibold">Seller Information</h3>
-                <p>Name: {selectedTransaction.seller}</p>
-                {/* Add more seller details here */}
+                <h3 className="font-semibold">Lister Information</h3>
+                <p>Name: {selectedTransaction.Lister}</p>
+                {/* Add more Lister details here */}
               </div>
 
               <div>

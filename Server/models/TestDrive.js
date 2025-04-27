@@ -5,6 +5,7 @@ const testDriveSchema = new mongoose.Schema({
   car_id: {
     type: Number,
     required: true,
+    unique: true,
   },
   user_id: {
     type: String,

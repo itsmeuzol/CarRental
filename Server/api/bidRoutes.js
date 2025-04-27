@@ -51,7 +51,7 @@ router.post("/bids/place", async (req, res) => {
         .json({ error: "Auction has ended. Bidding is closed." });
     }
 
-    if (listing.RentSell !== "Auction") {
+    if (listing.RentList !== "Auction") {
       return res.status(400).json({ error: "This listing is not an auction." });
     }
 

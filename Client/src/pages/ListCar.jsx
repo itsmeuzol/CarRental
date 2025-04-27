@@ -6,7 +6,7 @@ import axios from "axios";
 import UserAuth from "../auth/UserAuth";
 import API_BASE_URL from "../config/apiConfig";
 
-function SellCar() {
+function ListCar() {
   const navigate = useNavigate(); // Initialize navigate
 
   const [step, setStep] = useState(1);
@@ -21,7 +21,7 @@ function SellCar() {
   const [formData, setFormData] = useState({
     user_id: String(userId),
     listing_status: "requested",
-    RentSell: "",
+    RentList: "",
     make: "",
     model: "",
     year: "",
@@ -88,21 +88,24 @@ function SellCar() {
   const handleInputChange = (e) => {
     const { id, value, type, checked } = e.target;
 
+    // Ensure safe value for non-null values
     const safeValue = value === null ? "" : value;
 
     if (id.includes(".")) {
       const [parent, child] = id.split(".");
+      // Update the nested object correctly
       setFormData((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: type === "checkbox" ? checked : value,
+          [child]: type === "checkbox" ? checked : value, // Update specific feature checkbox
         },
       }));
     } else {
+      // Update non-nested values
       setFormData((prev) => ({
         ...prev,
-        [id]: type === "checkbox" ? checked : value,
+        [id]: type === "checkbox" ? checked : safeValue,
       }));
     }
   };
@@ -115,18 +118,31 @@ function SellCar() {
     try {
       const formDataToSend = new FormData();
 
+      // Append form data to FormData
       Object.keys(formData).forEach((key) => {
         if (typeof formData[key] === "object" && formData[key] !== null) {
-          formDataToSend.append(key, JSON.stringify(formData[key]));
+          // If it's an object, append each property individually
+          if (key === "extraFeatures") {
+            Object.keys(formData[key]).forEach((featureKey) => {
+              formDataToSend.append(
+                `extraFeatures[${featureKey}]`,
+                formData[key][featureKey]
+              );
+            });
+          } else {
+            formDataToSend.append(key, JSON.stringify(formData[key])); // For other nested objects
+          }
         } else {
-          formDataToSend.append(key, formData[key]);
+          formDataToSend.append(key, formData[key]); // For simple values
         }
       });
 
-      selectedImages.forEach((image, index) => {
+      // Append images
+      selectedImages.forEach((image) => {
         formDataToSend.append("images", image);
       });
 
+      // Send the request
       const response = await fetch(`${API_BASE_URL}/api/listings/listings`, {
         method: "POST",
         body: formDataToSend,
@@ -180,7 +196,7 @@ function SellCar() {
           <p className="dark:text-white font-medium text-xl">List Your Car</p>
           <p className="dark:text-white font-medium text-xl">Get Contacted</p>
           <p className="dark:text-white font-medium text-xl">
-            Sell with Confidence
+            List with Confidence
           </p>
         </div>
 
@@ -230,19 +246,19 @@ function SellCar() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label
-                    htmlFor="RentSell"
+                    htmlFor="RentList"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Rent or Sell or Auction
+                    Rent or List or Auction
                   </label>
                   <select
-                    id="RentSell"
-                    value={formData.RentSell}
+                    id="RentList"
+                    value={formData.RentList}
                     onChange={handleInputChange}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors duration-200"
                   >
                     <option value="">Select</option>
-                    <option value="Sell">Sell</option>
+                    <option value="List">List</option>
                     <option value="Rent">Rent</option>
                     <option value="Auction">Auction</option>
                   </select>
@@ -384,10 +400,10 @@ function SellCar() {
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors duration-200"
                   >
                     <option value="">Select Transmission</option>
-                    <option value="automatic">Automatic</option>
-                    <option value="manual">Manual</option>
-                    <option value="cvt">CVT</option>
-                    <option value="semi-automatic">Semi-Automatic</option>
+                    <option value="Automatic">Automatic</option>
+                    <option value="Manual">Manual</option>
+                    <option value="CVT">CVT</option>
+                    <option value="Semi-automatic">Semi-Automatic</option>
                   </select>
                 </div>
                 <div>
@@ -404,12 +420,12 @@ function SellCar() {
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors duration-200"
                   >
                     <option value="">Select Fuel Type</option>
-                    <option value="petrol">Petrol</option>
-                    <option value="diesel">Diesel</option>
-                    <option value="electric">Electric</option>
-                    <option value="hybrid">Hybrid</option>
-                    <option value="cng">CNG</option>
-                    <option value="lpg">LPG</option>
+                    <option value="Petrol">Petrol</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Electric">Electric</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="Cng">CNG</option>
+                    <option value="Lpg">LPG</option>
                   </select>
                 </div>
                 <div>
@@ -476,14 +492,14 @@ function SellCar() {
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors duration-200"
                   >
                     <option value="">Select Car Type</option>
-                    <option value="sedan">Sedan</option>
-                    <option value="suv">SUV</option>
-                    <option value="hatchback">Hatchback</option>
-                    <option value="truck">Truck</option>
-                    <option value="coupe">Coupe</option>
-                    <option value="wagon">Wagon</option>
-                    <option value="van">Van</option>
-                    <option value="convertible">Convertible</option>
+                    <option value="Sedan">Sedan</option>
+                    <option value="SUV">SUV</option>
+                    <option value="Hatchback">Hatchback</option>
+                    <option value="Truck">Truck</option>
+                    <option value="Coupe">Coupe</option>
+                    <option value="Wagon">Wagon</option>
+                    <option value="Van">Van</option>
+                    <option value="Convertible">Convertible</option>
                   </select>
                 </div>
               </div>
@@ -687,4 +703,4 @@ function SellCar() {
   );
 }
 
-export default UserAuth(SellCar);
+export default UserAuth(ListCar);

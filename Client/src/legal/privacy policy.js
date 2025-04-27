@@ -27,7 +27,7 @@ export default function PrivacyPolicy({ isOpen, onClose }) {
             protecting your personal data. This Privacy Policy explains what
             information we collect, how we use it, and your rights regarding
             your personal information when you use our services, including
-            purchasing, selling, or renting vehicles through our platform.
+            purchasing, Listing, or renting vehicles through our platform.
           </p>
 
           <h4 className="text-lg font-semibold mt-4">

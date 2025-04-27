@@ -1,21 +1,51 @@
-import { useState } from 'react'
-import { Search, Filter, MoreHorizontal, Eye, Edit, AlertCircle, X, MessageSquare } from 'lucide-react'
+import { useState } from "react";
+import {
+  Search,
+  Filter,
+  MoreHorizontal,
+  Eye,
+  Edit,
+  AlertCircle,
+  X,
+  MessageSquare,
+} from "lucide-react";
 
 export default function UserManagement() {
-  const [selectedUser, setSelectedUser] = useState(null)
-  const [showUserDetail, setShowUserDetail] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserDetail, setShowUserDetail] = useState(false);
 
   const users = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin', status: 'Active', lastLogin: '2023-06-15 10:30 AM' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Seller', status: 'Active', lastLogin: '2023-06-14 02:45 PM' },
-    { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'Renter', status: 'Suspended', lastLogin: '2023-06-10 09:15 AM' },
+    {
+      id: 1,
+      name: "John Doe",
+      email: "john@example.com",
+      role: "Admin",
+      status: "Active",
+      lastLogin: "2023-06-15 10:30 AM",
+    },
+    {
+      id: 2,
+      name: "Jane Smith",
+      email: "jane@example.com",
+      role: "Lister",
+      status: "Active",
+      lastLogin: "2023-06-14 02:45 PM",
+    },
+    {
+      id: 3,
+      name: "Bob Johnson",
+      email: "bob@example.com",
+      role: "Renter",
+      status: "Suspended",
+      lastLogin: "2023-06-10 09:15 AM",
+    },
     // Add more user data as needed
-  ]
+  ];
 
   const handleViewUser = (user) => {
-    setSelectedUser(user)
-    setShowUserDetail(true)
-  }
+    setSelectedUser(user);
+    setShowUserDetail(true);
+  };
 
   return (
     <div className="p-6">
@@ -24,7 +54,10 @@ export default function UserManagement() {
       {/* Search and Filters */}
       <div className="flex items-center space-x-4 mb-6">
         <div className="relative flex-grow">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            size={20}
+          />
           <input
             type="text"
             placeholder="Search users..."
@@ -44,7 +77,9 @@ export default function UserManagement() {
           <option>Suspend Selected</option>
           <option>Delete Selected</option>
         </select>
-        <button className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-md">Apply</button>
+        <button className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-md">
+          Apply
+        </button>
       </div>
 
       {/* User Table */}
@@ -67,16 +102,23 @@ export default function UserManagement() {
                 <td className="py-2 px-4 border-b">{user.email}</td>
                 <td className="py-2 px-4 border-b">{user.role}</td>
                 <td className="py-2 px-4 border-b">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      user.status === "Active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
                     {user.status}
                   </span>
                 </td>
                 <td className="py-2 px-4 border-b">{user.lastLogin}</td>
                 <td className="py-2 px-4 border-b">
                   <div className="flex space-x-2">
-                    <button onClick={() => handleViewUser(user)} className="text-blue-500 hover:text-blue-700">
+                    <button
+                      onClick={() => handleViewUser(user)}
+                      className="text-blue-500 hover:text-blue-700"
+                    >
                       <Eye size={18} />
                     </button>
                     <button className="text-green-500 hover:text-green-700">
@@ -99,7 +141,10 @@ export default function UserManagement() {
           <div className="bg-white w-1/3 p-6 overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">User Details</h2>
-              <button onClick={() => setShowUserDetail(false)} className="text-gray-500 hover:text-gray-700">
+              <button
+                onClick={() => setShowUserDetail(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
                 <X size={24} />
               </button>
             </div>
@@ -138,5 +183,5 @@ export default function UserManagement() {
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -1,11 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Search, Filter, Edit, Eye, Trash2, Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
-import Sidebar from './Sidebar';
-import AdminCarListingForm from './AdminCarListingForm';
-import AdminAuth from './AdminAuth';
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import API_BASE_URL from '../config/apiConfig';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import {
+  Search,
+  Filter,
+  Edit,
+  Eye,
+  Trash2,
+  Plus,
+  X,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import Sidebar from "./Sidebar";
+import AdminCarListingForm from "./AdminCarListingForm";
+import AdminAuth from "./AdminAuth";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
+import API_BASE_URL from "../config/apiConfig";
 
 function BookingManagement() {
   const [listings, setListings] = useState([]);
@@ -17,30 +32,30 @@ function BookingManagement() {
   const [showFilters, setShowFilters] = useState(false);
 
   const [filters, setFilters] = useState({
-    paymentStatus: 'all',
-    paymentRange: { min: '', max: '' },
-    dueAmount: 'all',
-    searchQuery: '',
-    bookingStatus: 'all'
+    paymentStatus: "all",
+    paymentRange: { min: "", max: "" },
+    dueAmount: "all",
+    searchQuery: "",
+    bookingStatus: "all",
   });
 
   const [formData, setFormData] = useState({
-    listing_id: '',
-    user_id: '',
-    car_id: '',
-    booking_start_date: '',
-    booking_end_date: '',
-    total_price: '',
-    paid_price: '',
-    transaction_id: '',
-    booking_status: 'pending',
-    payment_status: 'pending'
+    listing_id: "",
+    user_id: "",
+    car_id: "",
+    booking_start_date: "",
+    booking_end_date: "",
+    total_price: "",
+    paid_price: "",
+    transaction_id: "",
+    booking_status: "pending",
+    payment_status: "pending",
   });
 
   const parseAmount = (amount) => {
     if (amount === null || amount === undefined) return 0;
-    if (typeof amount === 'number') return amount;
-    if (typeof amount === 'object' && amount.$numberDecimal) {
+    if (typeof amount === "number") return amount;
+    if (typeof amount === "object" && amount.$numberDecimal) {
       return parseFloat(amount.$numberDecimal);
     }
     const parsed = parseFloat(amount);
@@ -59,51 +74,55 @@ function BookingManagement() {
 
   const fetchListings = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/booking`);
+      const response = await axios.get(`${API_BASE_URL}/api/bookings`);
       if (response.status === 200) {
-        const processedListings = response.data.map(listing => ({
+        const processedListings = response.data.map((listing) => ({
           ...listing,
           total_price: parseAmount(listing.total_price),
-          paid_price: parseAmount(listing.paid_price)
+          paid_price: parseAmount(listing.paid_price),
         }));
         setListings(processedListings);
         setFilteredListings(processedListings);
       }
     } catch (error) {
-      console.error('Error fetching listings:', error);
-      alert(`Failed to fetch listings: ${error.response?.data?.message || 'Unknown error'}`);
+      console.error("Error fetching listings:", error);
+      alert(
+        `Failed to fetch listings: ${
+          error.response?.data?.message || "Unknown error"
+        }`
+      );
     }
   };
 
   const applyFilters = () => {
     let results = [...listings];
 
-    if (filters.paymentStatus !== 'all') {
-      results = results.filter(booking =>
-        booking.payment_status === filters.paymentStatus
+    if (filters.paymentStatus !== "all") {
+      results = results.filter(
+        (booking) => booking.payment_status === filters.paymentStatus
       );
     }
 
-    if (filters.paymentRange.min !== '') {
-      results = results.filter(booking =>
-        booking.paid_price >= parseFloat(filters.paymentRange.min)
+    if (filters.paymentRange.min !== "") {
+      results = results.filter(
+        (booking) => booking.paid_price >= parseFloat(filters.paymentRange.min)
       );
     }
-    if (filters.paymentRange.max !== '') {
-      results = results.filter(booking =>
-        booking.paid_price <= parseFloat(filters.paymentRange.max)
+    if (filters.paymentRange.max !== "") {
+      results = results.filter(
+        (booking) => booking.paid_price <= parseFloat(filters.paymentRange.max)
       );
     }
 
-    if (filters.dueAmount !== 'all') {
-      results = results.filter(booking => {
+    if (filters.dueAmount !== "all") {
+      results = results.filter((booking) => {
         const dueAmount = booking.total_price - booking.paid_price;
         switch (filters.dueAmount) {
-          case 'none':
+          case "none":
             return dueAmount === 0;
-          case 'partial':
+          case "partial":
             return dueAmount > 0 && dueAmount < booking.total_price;
-          case 'full':
+          case "full":
             return dueAmount === booking.total_price;
           default:
             return true;
@@ -111,19 +130,28 @@ function BookingManagement() {
       });
     }
 
-    if (filters.bookingStatus !== 'all') {
-      results = results.filter(booking =>
-        booking.booking_status === filters.bookingStatus
+    if (filters.bookingStatus !== "all") {
+      results = results.filter(
+        (booking) => booking.booking_status === filters.bookingStatus
       );
     }
 
     if (filters.searchQuery.trim()) {
       const query = filters.searchQuery.trim().toLowerCase();
-      results = results.filter(booking =>
-        String(booking.booking_id || '').toLowerCase().includes(query) ||
-        String(booking.user_id || '').toLowerCase().includes(query) ||
-        String(booking.transaction_id || '').toLowerCase().includes(query) ||
-        String(booking.car_id || '').toLowerCase().includes(query)
+      results = results.filter(
+        (booking) =>
+          String(booking.booking_id || "")
+            .toLowerCase()
+            .includes(query) ||
+          String(booking.user_id || "")
+            .toLowerCase()
+            .includes(query) ||
+          String(booking.transaction_id || "")
+            .toLowerCase()
+            .includes(query) ||
+          String(booking.car_id || "")
+            .toLowerCase()
+            .includes(query)
       );
     }
 
@@ -132,52 +160,64 @@ function BookingManagement() {
 
   const handleViewListing = async (listing) => {
     if (!listing || !listing.booking_id) {
-      console.error('Invalid listing:', listing);
-      alert('Cannot view listing: Invalid listing data');
+      console.error("Invalid listing:", listing);
+      alert("Cannot view listing: Invalid listing data");
       return;
     }
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/booking/${listing.booking_id}`);
+      const response = await axios.get(
+        `${API_BASE_URL}/api/booking/${listing.booking_id}`
+      );
       setSelectedListing(response.data);
       setShowViewModel(true);
     } catch (error) {
-      console.error('Error fetching listing details:', error);
-      alert(`Failed to fetch listing details: ${error.response?.data?.message || 'Unknown error'}`);
+      console.error("Error fetching listing details:", error);
+      alert(
+        `Failed to fetch listing details: ${
+          error.response?.data?.message || "Unknown error"
+        }`
+      );
     }
   };
 
   const handleEditListing = async (listing) => {
     if (!listing || !listing.booking_id) {
-      console.error('Invalid listing data:', listing);
-      alert('Cannot edit listing: Invalid listing data');
+      console.error("Invalid listing data:", listing);
+      alert("Cannot edit listing: Invalid listing data");
       return;
     }
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/booking/${listing.booking_id}`);
+      const response = await axios.get(
+        `${API_BASE_URL}/api/booking/${listing.booking_id}`
+      );
       if (!response.data) {
-        throw new Error('No data returned from the server');
+        throw new Error("No data returned from the server");
       }
 
       setSelectedListing(response.data);
       setFormData({
-        listing_id: response.data.listing_id || '',
-        user_id: response.data.user_id || '',
-        car_id: response.data.car_id || '',
-        booking_start_date: response.data.booking_start_date || '',
-        booking_end_date: response.data.booking_end_date || '',
-        total_price: response.data.total_price?.toString() || '',
-        paid_price: response.data.paid_price?.toString() || '',
-        transaction_id: response.data.transaction_id || '',
-        booking_status: response.data.booking_status || 'pending',
-        payment_status: response.data.payment_status || 'pending',
+        listing_id: response.data.listing_id || "",
+        user_id: response.data.user_id || "",
+        car_id: response.data.car_id || "",
+        booking_start_date: response.data.booking_start_date || "",
+        booking_end_date: response.data.booking_end_date || "",
+        total_price: response.data.total_price?.toString() || "",
+        paid_price: response.data.paid_price?.toString() || "",
+        transaction_id: response.data.transaction_id || "",
+        booking_status: response.data.booking_status || "pending",
+        payment_status: response.data.payment_status || "pending",
       });
 
       setShowAddEditModal(true);
     } catch (error) {
-      console.error('Error fetching listing for edit:', error);
-      alert(`Failed to fetch listing for editing: ${error.response?.data?.message || 'Unknown error'}`);
+      console.error("Error fetching listing for edit:", error);
+      alert(
+        `Failed to fetch listing for editing: ${
+          error.response?.data?.message || "Unknown error"
+        }`
+      );
     }
   };
 
@@ -190,33 +230,45 @@ function BookingManagement() {
         formData
       );
       if (response.status === 200) {
-        alert('Listing updated successfully!');
+        alert("Listing updated successfully!");
         setShowAddEditModal(false);
         fetchListings();
       }
     } catch (error) {
-      console.error('Error saving listing:', error);
-      alert(`Failed to save listing: ${error.response?.data?.message || 'Unknown error'}`);
+      console.error("Error saving listing:", error);
+      alert(
+        `Failed to save listing: ${
+          error.response?.data?.message || "Unknown error"
+        }`
+      );
     }
   };
 
   const handleDeleteListing = async (listing) => {
     if (!listing || !listing.booking_id) {
-      console.error('Invalid listing:', listing);
-      alert('Cannot delete listing: Invalid listing data');
+      console.error("Invalid listing:", listing);
+      alert("Cannot delete listing: Invalid listing data");
       return;
     }
 
-    const confirmDelete = window.confirm('Are you sure you want to delete this listing?');
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this listing?"
+    );
 
     if (confirmDelete) {
       try {
-        await axios.delete(`${API_BASE_URL}/api/booking/${listing.booking_id}`);
+        await axios.delete(
+          `${API_BASE_URL}/api/bookings/${listing.booking_id}`
+        );
         fetchListings();
-        alert('Listing deleted successfully');
+        alert("Listing deleted successfully");
       } catch (error) {
-        console.error('Error deleting listing:', error);
-        alert(`Failed to delete listing: ${error.response?.data?.message || 'Unknown error'}`);
+        console.error("Error deleting listing:", error);
+        alert(
+          `Failed to delete listing: ${
+            error.response?.data?.message || "Unknown error"
+          }`
+        );
       }
     }
   };
@@ -226,16 +278,16 @@ function BookingManagement() {
     setShowViewModel(false);
     setSelectedListing(null);
     setFormData({
-      listing_id: '',
-      user_id: '',
-      car_id: '',
-      booking_start_date: '',
-      booking_end_date: '',
-      total_price: '',
-      paid_price: '',
-      transaction_id: '',
-      booking_status: 'pending',
-      payment_status: 'pending'
+      listing_id: "",
+      user_id: "",
+      car_id: "",
+      booking_start_date: "",
+      booking_end_date: "",
+      total_price: "",
+      paid_price: "",
+      transaction_id: "",
+      booking_status: "pending",
+      payment_status: "pending",
     });
   };
 
@@ -254,11 +306,10 @@ function BookingManagement() {
             className="px-4 py-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 flex items-center space-x-2"
           >
             <Filter size={16} />
-            <span>{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
+            <span>{showFilters ? "Hide Filters" : "Show Filters"}</span>
             {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
         </div>
-
 
         {/* Filters Section */}
         {showFilters && (
@@ -266,11 +317,15 @@ function BookingManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-white rounded-lg shadow">
               {/* Payment Status Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Payment Status</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Payment Status
+                </label>
                 <select
                   className="w-full p-2 border rounded-md"
                   value={filters.paymentStatus}
-                  onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, paymentStatus: e.target.value })
+                  }
                 >
                   <option value="all">All Payments</option>
                   <option value="pending">Pending</option>
@@ -282,38 +337,54 @@ function BookingManagement() {
 
               {/* Payment Range Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Payment Range (₹)</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Payment Range (₹)
+                </label>
                 <div className="flex space-x-2">
                   <input
                     type="number"
                     placeholder="Min"
                     className="w-1/2 p-2 border rounded-md"
                     value={filters.paymentRange.min}
-                    onChange={(e) => setFilters({
-                      ...filters,
-                      paymentRange: { ...filters.paymentRange, min: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        paymentRange: {
+                          ...filters.paymentRange,
+                          min: e.target.value,
+                        },
+                      })
+                    }
                   />
                   <input
                     type="number"
                     placeholder="Max"
                     className="w-1/2 p-2 border rounded-md"
                     value={filters.paymentRange.max}
-                    onChange={(e) => setFilters({
-                      ...filters,
-                      paymentRange: { ...filters.paymentRange, max: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        paymentRange: {
+                          ...filters.paymentRange,
+                          max: e.target.value,
+                        },
+                      })
+                    }
                   />
                 </div>
               </div>
 
               {/* Due Amount Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Due Amount</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Due Amount
+                </label>
                 <select
                   className="w-full p-2 border rounded-md"
                   value={filters.dueAmount}
-                  onChange={(e) => setFilters({ ...filters, dueAmount: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, dueAmount: e.target.value })
+                  }
                 >
                   <option value="all">All</option>
                   <option value="none">No Due</option>
@@ -324,11 +395,15 @@ function BookingManagement() {
 
               {/* Booking Status Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Booking Status</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Booking Status
+                </label>
                 <select
                   className="w-full p-2 border rounded-md"
                   value={filters.bookingStatus}
-                  onChange={(e) => setFilters({ ...filters, bookingStatus: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, bookingStatus: e.target.value })
+                  }
                 >
                   <option value="all">All Bookings</option>
                   <option value="pending">Pending</option>
@@ -341,7 +416,10 @@ function BookingManagement() {
               {/* Search Box */}
               <div className="space-y-2 md:col-span-2 lg:col-span-3">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={20}
+                  />
                   <input
                     type="text"
                     placeholder="Search by Booking ID, User ID, Car ID, or Transaction ID..."
@@ -349,13 +427,18 @@ function BookingManagement() {
                     value={filters.searchQuery}
                     onChange={(e) => {
                       const newValue = e.target.value;
-                      setFilters(prev => ({ ...prev, searchQuery: newValue }));
+                      setFilters((prev) => ({
+                        ...prev,
+                        searchQuery: newValue,
+                      }));
                     }}
                   />
                   {filters.searchQuery && (
                     <button
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      onClick={() => setFilters(prev => ({ ...prev, searchQuery: '' }))}
+                      onClick={() =>
+                        setFilters((prev) => ({ ...prev, searchQuery: "" }))
+                      }
                     >
                       <X size={16} />
                     </button>
@@ -368,13 +451,15 @@ function BookingManagement() {
             <div className="flex justify-between items-center">
               <button
                 className="px-4 py-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 flex items-center space-x-2"
-                onClick={() => setFilters({
-                  paymentStatus: 'all',
-                  paymentRange: { min: '', max: '' },
-                  dueAmount: 'all',
-                  searchQuery: '',
-                  bookingStatus: 'all'
-                })}
+                onClick={() =>
+                  setFilters({
+                    paymentStatus: "all",
+                    paymentRange: { min: "", max: "" },
+                    dueAmount: "all",
+                    searchQuery: "",
+                    bookingStatus: "all",
+                  })
+                }
               >
                 <Filter size={16} />
                 <span>Reset Filters</span>
@@ -384,7 +469,8 @@ function BookingManagement() {
                 className="bg-blue-500 text-white px-4 py-2 rounded flex items-center"
                 onClick={() => setShowAdminCarListingForm(true)}
               >
-                <Plus size={20} className="mr-2" />Add Listing
+                <Plus size={20} className="mr-2" />
+                Add Listing
               </button>
             </div>
           </div>
@@ -398,7 +484,8 @@ function BookingManagement() {
                 <th className="py-2 px-4 border-b text-left">Booking ID</th>
                 <th className="py-2 px-4 border-b text-left">Listing ID</th>
                 <th className="py-2 px-4 border-b text-left">User ID</th>
-                <th className="py-2 px-4 border-b text-left">Car ID</th>
+
+                <th className="py-2 px-4 border-b text-left">User Name</th>
                 <th className="py-2 px-4 border-b text-left">Total Price</th>
                 <th className="py-2 px-4 border-b text-left">Paid Price</th>
                 <th className="py-2 px-4 border-b text-left">Status</th>
@@ -408,28 +495,45 @@ function BookingManagement() {
             <tbody>
               {filteredListings.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4">No bookings found matching the filters</td>
+                  <td colSpan="8" className="text-center py-4">
+                    No bookings found matching the filters
+                  </td>
                 </tr>
               ) : (
-                filteredListings.map(listing => (
+                filteredListings.map((listing) => (
                   <tr key={listing.booking_id} className="hover:bg-gray-50">
-                    <td className="py-2 px-4 border-b">{listing.booking_id || 'N/A'}</td>
-                    <td className="py-2 px-4 border-b">{listing.listing_id || 'N/A'}</td>
-                    <td className="py-2 px-4 border-b">{listing.user_id || 'N/A'}</td>
-                    <td className="py-2 px-4 border-b">{listing.car_id || 'N/A'}</td>
                     <td className="py-2 px-4 border-b">
-                      ₹{listing.total_price?.toLocaleString() || 'N/A'}
+                      {listing.booking_id || "N/A"}
                     </td>
                     <td className="py-2 px-4 border-b">
-                      ₹{listing.paid_price?.toLocaleString() || 'N/A'}
+                      {listing.listing_id || "N/A"}
                     </td>
                     <td className="py-2 px-4 border-b">
-                      <span className={`px-2 py-1 rounded-full text-sm ${listing.booking_status === 'completed' ? 'bg-green-100 text-green-800' :
-                          listing.booking_status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
-                            listing.booking_status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                              'bg-yellow-100 text-yellow-800'
-                        }`}>
-                        {listing.booking_status?.charAt(0).toUpperCase() + listing.booking_status?.slice(1) || 'N/A'}
+                      {listing.user_id || "N/A"}
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      {listing.userDetails?.name || "N/A"}
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      ₹{listing.total_price?.toLocaleString() || "N/A"}
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      ₹{listing.paid_price?.toLocaleString() || "N/A"}
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      <span
+                        className={`px-2 py-1 rounded-full text-sm ${
+                          listing.booking_status === "completed"
+                            ? "bg-green-100 text-green-800"
+                            : listing.booking_status === "confirmed"
+                            ? "bg-blue-100 text-blue-800"
+                            : listing.booking_status === "cancelled"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {listing.booking_status?.charAt(0).toUpperCase() +
+                          listing.booking_status?.slice(1) || "N/A"}
                       </span>
                     </td>
                     <td className="py-2 px-4 border-b">
@@ -478,87 +582,134 @@ function BookingManagement() {
               <form onSubmit={handleSaveListing} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">User ID</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      User ID
+                    </label>
                     <input
                       type="text"
                       value={formData.user_id}
-                      onChange={(e) => setFormData({ ...formData, user_id: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, user_id: e.target.value })
+                      }
                       className="mt-1 p-2 w-full border rounded-md"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Car ID</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Car ID
+                    </label>
                     <input
                       type="text"
                       value={formData.car_id}
-                      onChange={(e) => setFormData({ ...formData, car_id: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, car_id: e.target.value })
+                      }
                       className="mt-1 p-2 w-full border rounded-md"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Start Date
+                    </label>
                     <input
                       type="date"
                       value={formData.booking_start_date}
-                      onChange={(e) => setFormData({ ...formData, booking_start_date: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          booking_start_date: e.target.value,
+                        })
+                      }
                       className="mt-1 p-2 w-full border rounded-md"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">End Date</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      End Date
+                    </label>
                     <input
                       type="date"
                       value={formData.booking_end_date}
-                      onChange={(e) => setFormData({ ...formData, booking_end_date: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          booking_end_date: e.target.value,
+                        })
+                      }
                       className="mt-1 p-2 w-full border rounded-md"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Total Price</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Total Price
+                    </label>
                     <input
                       type="number"
                       value={formData.total_price}
-                      onChange={(e) => setFormData({ ...formData, total_price: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          total_price: e.target.value,
+                        })
+                      }
                       className="mt-1 p-2 w-full border rounded-md"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Paid Price</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Paid Price
+                    </label>
                     <input
                       type="number"
                       value={formData.paid_price}
-                      onChange={(e) => setFormData({ ...formData, paid_price: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, paid_price: e.target.value })
+                      }
                       className="mt-1 p-2 w-full border rounded-md"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Transaction ID</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Transaction ID
+                    </label>
                     <input
                       type="text"
                       value={formData.transaction_id}
-                      onChange={(e) => setFormData({ ...formData, transaction_id: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          transaction_id: e.target.value,
+                        })
+                      }
                       className="mt-1 p-2 w-full border rounded-md"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Booking Status</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Booking Status
+                    </label>
                     <select
                       value={formData.booking_status}
-                      onChange={(e) => setFormData({ ...formData, booking_status: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          booking_status: e.target.value,
+                        })
+                      }
                       className="mt-1 p-2 w-full border rounded-md"
                       required
                     >
@@ -570,10 +721,17 @@ function BookingManagement() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Payment Status</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Payment Status
+                    </label>
                     <select
                       value={formData.payment_status}
-                      onChange={(e) => setFormData({ ...formData, payment_status: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          payment_status: e.target.value,
+                        })
+                      }
                       className="mt-1 p-2 w-full border rounded-md"
                       required
                     >
@@ -627,8 +785,13 @@ function BookingManagement() {
 
                 <div>
                   <h3 className="font-semibold">Payment Details</h3>
-                  <p>Total Price: ₹{selectedListing.total_price?.toLocaleString()}</p>
-                  <p>Paid Amount: ₹{selectedListing.paid_price?.toLocaleString()}</p>
+                  <p>
+                    Total Price: ₹
+                    {selectedListing.total_price?.toLocaleString()}
+                  </p>
+                  <p>
+                    Paid Amount: ₹{selectedListing.paid_price?.toLocaleString()}
+                  </p>
                   <p>Transaction ID: {selectedListing.transaction_id}</p>
                   <p>Payment Status: {selectedListing.payment_status}</p>
                 </div>
@@ -636,8 +799,18 @@ function BookingManagement() {
                 <div>
                   <h3 className="font-semibold">Booking Status</h3>
                   <p>Current Status: {selectedListing.booking_status}</p>
-                  <p>Start Date: {new Date(selectedListing.booking_start_date).toLocaleDateString()}</p>
-                  <p>End Date: {new Date(selectedListing.booking_end_date).toLocaleDateString()}</p>
+                  <p>
+                    Start Date:{" "}
+                    {new Date(
+                      selectedListing.booking_start_date
+                    ).toLocaleDateString()}
+                  </p>
+                  <p>
+                    End Date:{" "}
+                    {new Date(
+                      selectedListing.booking_end_date
+                    ).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
 
@@ -663,7 +836,9 @@ function BookingManagement() {
                   <X size={20} />
                 </button>
               </div>
-              <AdminCarListingForm onClose={() => setShowAdminCarListingForm(false)} />
+              <AdminCarListingForm
+                onClose={() => setShowAdminCarListingForm(false)}
+              />
             </div>
           </div>
         )}

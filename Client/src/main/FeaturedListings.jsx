@@ -24,7 +24,7 @@ function FeaturedListings() {
         // Filter and transform buy listings
         const saleCars = data
           .filter(
-            (car) => car.RentSell === "Sell" && car.listing_status === "active"
+            (car) => car.RentList === "List" && car.listing_status === "active"
           )
           .slice(0, 6)
           .map((car, index) => ({
@@ -46,7 +46,7 @@ function FeaturedListings() {
         // Filter and transform rent listings
         const rentCars = data
           .filter(
-            (car) => car.RentSell === "Rent" && car.listing_status === "active"
+            (car) => car.RentList === "Rent" && car.listing_status === "active"
           )
           .slice(0, 6)
           .map((car, index) => ({
@@ -69,7 +69,7 @@ function FeaturedListings() {
         const auctionCars = data
           .filter(
             (car) =>
-              car.RentSell === "Auction" && car.listing_status === "active"
+              car.RentList === "Auction" && car.listing_status === "active"
           )
           .slice(0, 6)
           .map((car, index) => ({
@@ -180,7 +180,7 @@ function FeaturedListings() {
               <div className="h-56 bg-cover bg-center">
                 <img
                   alt={`${listing.make} ${listing.model}`}
-                  className="w-full h-48 object-fill"
+                  className="w-full h-full object-fill"
                   src={
                     listing.image.startsWith("http")
                       ? listing.image

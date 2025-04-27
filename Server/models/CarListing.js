@@ -21,9 +21,9 @@ const CarListingSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  RentSell: {
+  RentList: {
     type: String,
-    enum: ["Rent", "Sell", "Auction"],
+    enum: ["Rent", "List", "Auction"],
     required: false,
   },
   make: {
@@ -113,7 +113,7 @@ const CarListingSchema = new mongoose.Schema({
   auctionEndTime: {
     type: Date,
     required: function () {
-      return this.RentSell === "Auction";
+      return this.RentList === "Auction";
     },
   },
   winner: {

@@ -99,7 +99,7 @@ curl -X POST http://localhost:3001/api/listings \
   -d '{
     "user_id": 1,
     "owner": 1,
-    "RentSell": "Rent",
+    "RentList": "Rent",
     "make": "Toyota",
     "model": "Camry",
     "year": 2020,
@@ -278,7 +278,7 @@ curl -X PUT "http://localhost:3001/api/listings/uplistings/214" \
  -F "listing_status=active" \
  -F "user_id=67890" \
  -F "owner=123" \
- -F "RentSell=Sell" \
+ -F "RentList=List" \
  -F "make=Toyota" \
  -F "model=Corolla" \
  -F "year=2020" \

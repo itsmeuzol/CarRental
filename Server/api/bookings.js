@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const Booking = require("../models/Booking");
-
+const User = require("../models/Users"); // Adjust path as needed
+// Fetch bookings for a specific user
+const CarListing = require("../models/CarListing"); // Adjust path as needed
 const ServiceBooking = require("../models/serviceBooking");
 
 const db = require("../db");
@@ -66,15 +68,32 @@ router.get("/", async (req, res) => {
   try {
     // Fetch all bookings using Mongoose's `find()` method
     const bookings = await Booking.find();
-    res.json(bookings); // Return the fetched bookings as JSON
+    const bookingsWithUserDetails = await Promise.all(
+      bookings.map(async (booking) => {
+        const [carDetails, userDetails] = await Promise.all([
+          CarListing.findOne(
+            { listing_id: booking.car_id },
+            "model fuelType carType"
+          ),
+          User.findOne({ _id: booking.user_id }, "name email"), // 📌 Fetch user's name and email
+        ]);
+
+        return {
+          ...booking.toObject(),
+          carDetails: carDetails || {},
+          userDetails: userDetails || {},
+        };
+      })
+    );
+
+    res.status(200).json(bookingsWithUserDetails); // Return the fetched bookings as JSON
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Fetch bookings for a specific user
 router.get("/uid/", async (req, res) => {
-  const { user_id } = req.query; // Get `user_id` from query parameters
+  const { user_id } = req.query;
 
   if (!user_id) {
     return res
@@ -83,7 +102,6 @@ router.get("/uid/", async (req, res) => {
   }
 
   try {
-    // Fetch bookings for the specific user
     const bookings = await Booking.find({ user_id });
 
     if (!bookings.length) {
@@ -92,8 +110,23 @@ router.get("/uid/", async (req, res) => {
         .json({ message: "No bookings found for the specified user" });
     }
 
-    res.json(bookings);
+    const enrichedBookings = await Promise.all(
+      bookings.map(async (booking) => {
+        const carDetails = await CarListing.findOne(
+          { listing_id: booking.car_id }, // 🔁 Match car_id with listing_id
+          "model fuelType carType"
+        );
+
+        return {
+          ...booking.toObject(),
+          carDetails: carDetails || {},
+        };
+      })
+    );
+
+    res.json(enrichedBookings);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 });
@@ -213,17 +246,46 @@ router.post("/bookServicing", async (req, res) => {
 // Example Express route for fetching service bookings
 router.get("/ViewServiceBookings/:booking_id", async (req, res) => {
   try {
-    // Fetch all service bookings from the ServiceBooking model
-    const bookings = await ServiceBooking.find(); // This fetches all bookings
+    const bookings = await ServiceBooking.find(); // Fetch all bookings
 
     if (!bookings || bookings.length === 0) {
       return res.status(404).json({ message: "No service bookings found." });
     }
 
-    // Send the fetched data as JSON
-    res.json(bookings);
+    // Fetch user details for each booking
+    const bookingsWithUserDetails = await Promise.all(
+      bookings.map(async (booking) => {
+        const user = await User.findById(booking.userId).select("name email");
+        return {
+          ...booking.toObject(),
+          userDetails: user || {},
+        };
+      })
+    );
+
+    res.json(bookingsWithUserDetails);
   } catch (err) {
-    console.error("Error fetching bookings:", err); // Log the error for debugging
+    console.error("Error fetching bookings:", err);
+    res.status(500).json({ error: "Unable to fetch service bookings" });
+  }
+});
+
+// Route to fetch service bookings for a particular user
+router.get("/ViewServiceBookings/user/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const bookings = await ServiceBooking.find({ userId }); // Filter by user_id
+
+    if (!bookings || bookings.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No service bookings found for this user." });
+    }
+
+    res.status(200).json(bookings);
+  } catch (err) {
+    console.error("Error fetching service bookings:", err);
     res.status(500).json({ error: "Unable to fetch service bookings" });
   }
 });

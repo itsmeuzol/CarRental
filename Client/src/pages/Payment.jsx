@@ -174,7 +174,7 @@ export default function Payment() {
               };
 
               const bookingResponse = await fetch(
-                `${API_BASE_URL}/api/booking`,
+                `${API_BASE_URL}/api/bookings/`,
                 {
                   method: "POST",
                   headers: {

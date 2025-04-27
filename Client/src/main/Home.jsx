@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronRight } from "lucide-react";
 import "./App.css";
@@ -152,36 +151,6 @@ export default function Home() {
                   <span className="text-gray-800 dark:text-gray-200 text-lg">
                     {benefit}
                   </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="py-20 bg-gray-100 dark:bg-gray-900">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl sm:text-5xl font-bold text-center mb-16 text-gray-900 dark:text-white">
-              Market Insights
-            </h2>
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {[
-                { title: "Average Car Age", value: "6.5 years" },
-                { title: "Most Popular Brand", value: "Toyota" },
-                { title: "Avg. Rental Duration", value: "4 days" },
-                { title: "Electric Car Sales", value: "+25% YoY" },
-                { title: "Used Car Market Size", value: "$828 Billion" },
-                { title: "Online Car Sales", value: "12% of Total" },
-              ].map((stat, i) => (
-                <div
-                  key={i}
-                  className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg transition duration-300 ease-in-out transform hover:scale-105"
-                >
-                  <h3 className="font-bold text-xl mb-4 text-gray-900 dark:text-white">
-                    {stat.title}
-                  </h3>
-                  <p className="text-4xl font-extrabold text-black dark:text-white">
-                    {stat.value}
-                  </p>
                 </div>
               ))}
             </div>

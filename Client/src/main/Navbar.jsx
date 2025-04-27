@@ -22,6 +22,7 @@ function Navbar() {
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
+    localStorage.setItem("theme", newTheme); // save it
   };
 
   const toggleMenu = () => {
@@ -33,6 +34,8 @@ function Navbar() {
   };
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    setTheme(savedTheme);
     document.body.className = theme;
   }, [theme]);
 
@@ -170,31 +173,7 @@ function Navbar() {
               </Link>
             </>
           ) : (
-            <>
-              <Link
-                to="/ViewServiceBookings"
-                className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
-                onClick={closeMenu}
-              >
-                View Service Bookings
-              </Link>
-
-              <Link
-                to="/TestDriveBookings"
-                className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
-                onClick={closeMenu}
-              >
-                Schedule Test Drive Bookings
-              </Link>
-
-              <Link
-                to="/RentalBookings"
-                className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
-                onClick={closeMenu}
-              >
-                Rental Bookings
-              </Link>
-            </>
+            <></>
           )}
 
           <Link
@@ -207,11 +186,11 @@ function Navbar() {
 
           {role === "staff" && (
             <Link
-              to="/SellCar"
+              to="/ListCar"
               className="block py-2 px-4 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
               onClick={closeMenu}
             >
-              Sell Car
+              List car
             </Link>
           )}
         </nav>

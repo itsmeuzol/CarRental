@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
 const CarListing = require("../models/CarListing"); // Path to CarListing model
+const User = require("../models/Users"); // Path to User model
 const mongoose = require("mongoose");
 const Review = require("../models/Review");
 const TestDrive = require("../models/TestDrive"); // adjust path if needed
@@ -55,7 +56,11 @@ router.post("/listings", upload, async (req, res) => {
     const newCarListing = new CarListing({
       ...req.body,
       images: imagePaths,
-      RentSell: "Auction",
+      auctionEndTime:
+        req.body.RentList === "Auction"
+          ? new Date(Date.now() + 60 * 60 * 1000)
+          : null,
+
       auctionEndTime: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now
     });
 
@@ -239,20 +244,71 @@ router.post("/test-drives/schedule/:car_id", async (req, res) => {
 });
 
 // Route to fetch all scheduled test drives
+
 router.get("/test-drives/user/:user_id", async (req, res) => {
   const { user_id } = req.params;
 
   try {
     const testDrives = await TestDrive.find({ user_id });
+
     if (!testDrives.length) {
       return res
         .status(404)
         .json({ message: "No test drives found for this user." });
     }
 
-    res.status(200).json(testDrives);
+    // Fetch car details for each test drive
+    const testDrivesWithCarDetails = await Promise.all(
+      testDrives.map(async (testDrive) => {
+        const carDetails = await CarListing.findOne(
+          { listing_id: testDrive.car_id }, // 🔁 Match car_id with listing_id
+          "model fuelType carType"
+        );
+        return {
+          ...testDrive.toObject(),
+          carDetails: carDetails || {},
+        };
+      })
+    );
+
+    res.status(200).json(testDrivesWithCarDetails);
   } catch (err) {
     console.error("Error fetching user test drives:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// 🛠 Route to get all test drives (for staff)
+router.get("/test-drives", async (req, res) => {
+  try {
+    const testDrives = await TestDrive.find(); // 🚀 No filtering by user_id
+
+    if (!testDrives.length) {
+      return res.status(404).json({ message: "No test drives found." });
+    }
+
+    // Fetch car details for each test drive
+    const testDrivesWithDetails = await Promise.all(
+      testDrives.map(async (testDrive) => {
+        const [carDetails, userDetails] = await Promise.all([
+          CarListing.findOne(
+            { listing_id: testDrive.car_id },
+            "model fuelType carType"
+          ),
+          User.findOne({ _id: testDrive.user_id }, "name email"), // 📌 Fetch user's name and email
+        ]);
+
+        return {
+          ...testDrive.toObject(),
+          carDetails: carDetails || {},
+          userDetails: userDetails || {},
+        };
+      })
+    );
+
+    res.status(200).json(testDrivesWithDetails);
+  } catch (err) {
+    console.error("Error fetching all test drives:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

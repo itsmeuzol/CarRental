@@ -30,9 +30,9 @@ export default function TermsAndConditions({ isOpen, onClose }) {
 
           <h4 className="text-lg font-semibold mt-4">2. Services Provided</h4>
           <p>
-            AutoFusion provides a platform for buying, selling, and renting
+            AutoFusion provides a platform for buying, Listing, and renting
             second-hand vehicles. We act as an intermediary, connecting buyers,
-            sellers, and renters. The specific terms of transactions are between
+            Listers, and renters. The specific terms of transactions are between
             users.
           </p>
 
