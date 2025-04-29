@@ -111,9 +111,10 @@ router.post("/bids/finalize-auction/:listing_id", async (req, res) => {
   const { listing_id } = req.params;
 
   try {
-    const listing = await CarListing.findOne({ listing_id })
-      .populate("winner.user_id", "name email") // Populating user details (name, email)
+    const listing = await CarListing.findOne({ listing_id: Number(listing_id) })
+      .populate("winner.user_id", "name email")
       .exec();
+
     if (!listing) {
       return res.status(404).json({ error: "Listing not found." });
     }
@@ -123,8 +124,7 @@ router.post("/bids/finalize-auction/:listing_id", async (req, res) => {
       return res.status(400).json({ error: "Auction is still active." });
     }
 
-    // If already finalized
-    if (listing.winner) {
+    if (listing.winner && listing.winner.user_id) {
       return res.status(200).json({
         message: "Auction already finalized.",
         winner: listing.winner,
@@ -136,6 +136,8 @@ router.post("/bids/finalize-auction/:listing_id", async (req, res) => {
       .limit(1);
 
     if (highest.length === 0) {
+      listing.winner = null; // Optional: explicitly set to null
+      await listing.save();
       return res.status(200).json({ message: "No bids placed." });
     }
 
@@ -147,9 +149,17 @@ router.post("/bids/finalize-auction/:listing_id", async (req, res) => {
 
     await listing.save();
 
-    res
-      .status(200)
-      .json({ message: "Auction finalized", winner: listing.winner });
+    // Fetch the updated listing with populated winner
+    const updatedListing = await CarListing.findOne({
+      listing_id: Number(listing_id),
+    })
+      .populate("winner.user_id", "name email")
+      .exec();
+
+    res.status(200).json({
+      message: "Auction finalized",
+      winner: updatedListing.winner,
+    });
   } catch (err) {
     console.error("Error finalizing auction:", err);
     res.status(500).json({ error: "Server error while finalizing auction." });

@@ -114,6 +114,7 @@ export default function CarDetails() {
     if (!userId) {
       toast.error("You need to login to pay.");
     } else {
+      localStorage.setItem("paymentPurpose", "buy"); // <-- 👈 Set purpose here
       navigate(`/payment/${car.id}`);
     }
   };

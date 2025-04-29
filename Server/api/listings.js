@@ -58,10 +58,8 @@ router.post("/listings", upload, async (req, res) => {
       images: imagePaths,
       auctionEndTime:
         req.body.RentList === "Auction"
-          ? new Date(Date.now() + 60 * 60 * 1000)
+          ? new Date(Date.now() + 2 * 60 * 1000)
           : null,
-
-      auctionEndTime: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now
     });
 
     const savedListing = await newCarListing.save();

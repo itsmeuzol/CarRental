@@ -91,42 +91,6 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="py-20 bg-gray-100 dark:bg-gray-900">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl sm:text-5xl font-bold text-center mb-16 text-gray-900 dark:text-white">
-              How It Works
-            </h2>
-            <div className="grid gap-10 md:grid-cols-3">
-              {[
-                {
-                  title: "Browse",
-                  description: "Explore our wide selection of cars",
-                },
-                {
-                  title: "Choose",
-                  description: "Select the perfect car for your needs",
-                },
-                {
-                  title: "Drive",
-                  description: "Enjoy your new ride with confidence",
-                },
-              ].map((step, i) => (
-                <div key={i} className="flex flex-col items-center text-center">
-                  <div className="rounded-full bg-black text-white w-16 h-16 flex items-center justify-center text-2xl font-bold mb-6">
-                    {i + 1}
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-                    {step.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 text-lg">
-                    {step.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <FeaturedListings />
 
         <section className="py-20 bg-white dark:bg-gray-800">

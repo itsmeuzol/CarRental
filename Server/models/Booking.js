@@ -50,6 +50,11 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     unique: true, // Ensure the auto-generated booking_id is unique
   },
+  purpose: {
+    type: String,
+
+    required: true,
+  },
 });
 
 // Apply the auto-increment plugin to `booking_id` field

@@ -292,9 +292,7 @@ function Dashboard() {
               <div className="flex items-center gap-3">
                 <CarIcon className="w-5 h-5 text-blue-500" />
                 <div>
-                  <p className="font-medium">
-                    Rental Booking #{booking.booking_id}
-                  </p>
+                  <p className="font-medium">Booking #{booking.booking_id}</p>
                   <p className="text-sm text-gray-500">
                     {formatDateOnly(booking.booking_start_date)} -{" "}
                     {formatDateOnly(booking.booking_end_date)}
@@ -318,6 +316,7 @@ function Dashboard() {
                     <p className="text-xs text-gray-500">Car ID</p>
                     <p className="font-medium">{booking.car_id}</p>
                   </div>
+
                   <div>
                     <p className="text-xs text-gray-500">Car Type</p>
                     <p className="font-medium">
@@ -325,7 +324,7 @@ function Dashboard() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Car Type</p>
+                    <p className="text-xs text-gray-500">Car Model</p>
                     <p className="font-medium">
                       {booking.carDetails?.model || "N/A"}
                     </p>
@@ -381,6 +380,11 @@ function Dashboard() {
                       {getStatusBadge(booking.payment_status)}
                     </div>
                   </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Purpose of booking</p>
+                    <p className="font-bold ">{booking.purpose}</p>
+                  </div>
+
                   {isStaff && (
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -754,7 +758,7 @@ function Dashboard() {
               <h3 className="font-medium mb-3">Quick Stats</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Rental Bookings</span>
+                  <span className="text-sm text-gray-500"> Bookings</span>
                   <span className="font-medium">
                     {userData.bookings.length}
                   </span>
@@ -792,7 +796,7 @@ function Dashboard() {
                     }`}
                   >
                     <Car className="w-4 h-4" />
-                    Rental Bookings
+                    Bookings
                   </button>
                   <button
                     onClick={() => setActiveTab("payments")}

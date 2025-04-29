@@ -111,6 +111,7 @@ export default function Payment() {
   };
 
   const userId = localStorage.getItem("id");
+  const purpose = localStorage.getItem("paymentPurpose") || "buy";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -171,6 +172,7 @@ export default function Payment() {
                 paid_price: bookingPrice.toFixed(2),
                 booking_status: "confirmed",
                 payment_status: "paid",
+                purpose,
               };
 
               const bookingResponse = await fetch(
@@ -185,6 +187,9 @@ export default function Payment() {
               );
 
               if (bookingResponse.ok) {
+                // Remove the 'paymentPurpose' from localStorage after successful booking
+                localStorage.removeItem("paymentPurpose");
+
                 setStep(2);
               } else {
                 console.error("Failed to create booking record");

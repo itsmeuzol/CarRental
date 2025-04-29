@@ -122,6 +122,7 @@ export default function RentCarDetails() {
     if (!userId) {
       toast.error("You need to login to rent.");
     } else {
+      localStorage.setItem("paymentPurpose", "rent"); // <-- 👈 Set purpose here
       navigate(`/payment/${car.id}`);
     }
   };

@@ -22,6 +22,7 @@ router.post("/", async (req, res) => {
     booking_status,
     payment_status,
     transaction_id,
+    purpose,
   } = req.body;
 
   // Validate the required fields
@@ -55,6 +56,7 @@ router.post("/", async (req, res) => {
       transaction_id,
       booking_status: "pending",
       payment_status: "pending",
+      purpose,
     });
 
     const result = await newBooking.save();

@@ -34,6 +34,7 @@ function AuctionCarDetails() {
           const response = await axios.post(
             `${API_BASE_URL}/api/bids/finalize-auction/${id}`
           );
+          console.log("Auction finalized:", response.data);
           if (response.data.winner) {
             setCar((prev) => ({
               ...prev,
@@ -62,7 +63,7 @@ function AuctionCarDetails() {
     const interval = setInterval(fetchHighestBid, 5000); // every 5 seconds
     checkAuctionEnd(); // call this here
     return () => clearInterval(interval); // cleanup on unmount
-  }, [id, car?.auctionEndTime]);
+  }, [id, car?.auctionEndTime, navigate]);
 
   const handleBid = async () => {
     const userId = localStorage.getItem("id");
@@ -139,17 +140,18 @@ function AuctionCarDetails() {
           </p>
 
           {auctionEndTime && new Date() > new Date(auctionEndTime) ? (
-            car.winner ? (
+            car.winner?.user_id ? (
               <div className="mb-4 text-green-700 font-medium">
                 🏁 Auction Ended
                 <br />
-                🚗 Sold to User ID: <strong>{car.winner.user_id}</strong>
+                🚗 Sold to User ID: <strong>{car.winner.user_id.name}</strong>
                 <br />
-                💰 Winning Bid: ₹{parseFloat(highestBid).toLocaleString()}
+                💰 Winning Bid: ₹
+                {parseFloat(car.winner.bidAmount).toLocaleString()}
               </div>
             ) : (
               <p className="text-red-600 mb-4">
-                Auction Ended. No bids were placed.
+                Auction Ended. No valid winner found.
               </p>
             )
           ) : (
@@ -157,15 +159,16 @@ function AuctionCarDetails() {
               Auction Ends: {new Date(auctionEndTime).toLocaleString()}
             </p>
           )}
-          {!highestBid || isNaN(parseFloat(highestBid)) ? (
-            <p className="text-md font-medium text-gray-500 mb-2">
-              No bids have been placed
-            </p>
-          ) : (
-            <p className="text-md font-medium text-blue-700 mb-2">
-              Current Highest Bid: ₹{parseFloat(highestBid).toLocaleString()}
-            </p>
-          )}
+          {(new Date() < new Date(auctionEndTime) || !car.winner) &&
+            (!highestBid || isNaN(parseFloat(highestBid)) ? (
+              <p className="text-md font-medium text-gray-500 mb-2">
+                No bids have been placed
+              </p>
+            ) : (
+              <p className="text-md font-medium text-blue-700 mb-2">
+                Current Highest Bid: ₹{parseFloat(highestBid).toLocaleString()}
+              </p>
+            ))}
 
           <div className="mt-6">
             <label className="block mb-1 font-medium">Your Bid (₹)</label>
